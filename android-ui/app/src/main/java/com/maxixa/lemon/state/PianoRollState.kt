@@ -15,7 +15,7 @@ enum class Tool { Pencil, Eraser, Select, Pan }
  * Selection / clipboard / bulk-edit operations live in
  * PianoRollSelection.kt as extension functions.
  */
-class PianoRollState {
+class PianoRollState(private val store: SettingsStore? = null) {
     var tool by mutableStateOf(Tool.Pencil)
     var ppq by mutableStateOf(96)
     var barNum by mutableStateOf(4)
@@ -38,9 +38,27 @@ class PianoRollState {
     internal var clipboard: List<NoteView> = emptyList()
     var selectionRect by mutableStateOf<Rect?>(null)
     var showGhosts by mutableStateOf(false)
-    var scaleLockEnabled by mutableStateOf(false)
-    var scaleRoot by mutableStateOf(0)   // 0=C, 11=B
-    var scaleType by mutableStateOf(0)   // index into SCALE_PRESETS
+    private var _scaleLockEnabled by mutableStateOf(store?.scaleLockEnabled ?: false)
+    var scaleLockEnabled: Boolean
+        get() = _scaleLockEnabled
+        set(v) {
+            _scaleLockEnabled = v
+            store?.scaleLockEnabled = v
+        }
+    private var _scaleRoot by mutableStateOf(store?.scaleRoot ?: 0)
+    var scaleRoot: Int
+        get() = _scaleRoot
+        set(v) {
+            _scaleRoot = v
+            store?.scaleRoot = v
+        }
+    private var _scaleType by mutableStateOf(store?.scaleType ?: 0)
+    var scaleType: Int
+        get() = _scaleType
+        set(v) {
+            _scaleType = v
+            store?.scaleType = v
+        }
 
     /** Snap `key` to nearest scale note if scale lock is on; pass-through otherwise. */
     fun snapKey(key: Int): Int {

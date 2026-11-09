@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-//! Playlist wire format (v3).
+//! Playlist wire format (v4).
 //!
 //! Header (32 bytes, LE u32):
 //!   [0]  magic = 0x4C454D32  ("LEM3")
-//!   [4]  version = 3
+//!   [4]  version = 4
 //!   [8]  track_count
 //!   [12] pattern_count
 //!   [16] clip_count
@@ -11,7 +11,7 @@
 //!   [24] current_arrangement
 //!   [28] bar_num
 //!
-//! Per clip (48 bytes):
+//! Per clip (52 bytes):
 //!   [0]  track u32
 //!   [4]  position u32
 //!   [8]  length u32
@@ -24,6 +24,7 @@
 //!   [36] fade_in_tension f32
 //!   [40] fade_out_ms f32      (0 = no manual fade)
 //!   [44] fade_out_tension f32
+//!   [48] gain f32             (1.0 = unity)
 //!
 //! Per marker (52 bytes):
 //!   [0]  position u32
@@ -40,10 +41,10 @@
 use os_model::{Arrangement, Clip, ClipSource, Id, Project, TimeMarker};
 
 pub const HEADER: usize = 32;
-pub const CLIP:   usize = 48;
+pub const CLIP:   usize = 52;
 pub const MARKER: usize = 52;
 const MAGIC: u32 = 0x4C454D32;
-const VERSION: u32 = 3;
+const VERSION: u32 = 4;
 
 pub struct ClipWire {
     pub track: u16,
@@ -56,6 +57,7 @@ pub struct ClipWire {
     pub fade_in_tension: f32,
     pub fade_out_ms: f32,
     pub fade_out_tension: f32,
+    pub gain: f32,
 }
 
 pub struct MarkerWire {
@@ -120,6 +122,7 @@ pub fn pack(project: &Project) -> Vec<u8> {
         out.extend_from_slice(&fade_in_tension.to_le_bytes());
         out.extend_from_slice(&fade_out_ms.to_le_bytes());
         out.extend_from_slice(&fade_out_tension.to_le_bytes());
+        out.extend_from_slice(&c.gain().to_le_bytes());
     }
 
     for m in markers {
@@ -173,6 +176,7 @@ pub fn unpack(bytes: &[u8]) -> Result<Wire, String> {
         let fade_in_tension = f32::from_le_bytes(bytes[base+36..base+40].try_into().unwrap());
         let fade_out_ms = f32::from_le_bytes(bytes[base+40..base+44].try_into().unwrap());
         let fade_out_tension = f32::from_le_bytes(bytes[base+44..base+48].try_into().unwrap());
+        let gain = f32::from_le_bytes(bytes[base+48..base+52].try_into().unwrap());
         let source = match kind {
             1 => ClipSource::Channel(val),
             _ => ClipSource::Pattern(val),
@@ -180,7 +184,7 @@ pub fn unpack(bytes: &[u8]) -> Result<Wire, String> {
         let window = if wlo == 0.0 && whi == 0.0 { None } else { Some((wlo, whi)) };
         clips.push(ClipWire {
             track, position, length, source, muted, window,
-            fade_in_ms, fade_in_tension, fade_out_ms, fade_out_tension,
+            fade_in_ms, fade_in_tension, fade_out_ms, fade_out_tension, gain,
         });
         base += CLIP;
     }
@@ -241,6 +245,7 @@ pub fn commit(project: &mut Project, wire: Wire) -> Result<(), String> {
         if c.fade_out_ms > 0.0 && c.fade_out_ms.is_finite() {
             clip.set_fade_out(Some((c.fade_out_ms, c.fade_out_tension)));
         }
+        clip.set_gain(c.gain);
         arr.clips.push(clip);
     }
     arr.clips.sort_by_key(|c| c.position);

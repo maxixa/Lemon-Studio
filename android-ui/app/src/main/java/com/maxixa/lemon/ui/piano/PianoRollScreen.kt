@@ -35,7 +35,8 @@ fun PianoRollScreen(
     barNum: Int = 4,
     barDen: Int = 4,
 ) {
-    val state = remember { PianoRollState() }
+    val settings = LocalSettings.current
+    val state = remember { PianoRollState(settings) }
     var showZoom by remember { mutableStateOf(false) }
     var showTransform by remember { mutableStateOf(false) }
     var showGroove by remember { mutableStateOf(false) }

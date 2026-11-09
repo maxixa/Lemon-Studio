@@ -6,15 +6,15 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 private const val HEADER = 32
-private const val CLIP = 48
+private const val CLIP = 52
 private const val MARKER = 52
 private const val MARKER_NAME_BYTES = 32
 private const val MAGIC: Int = 0x4C454D32.toInt()  // "LEM2"
-private const val VERSION = 3
+private const val VERSION = 4
 private const val TAG = "Lemon"
 
 /**
- * Read side of the playlist wire (v3). Extracted from PlaylistBridge
+ * Read side of the playlist wire (v4). Extracted from PlaylistBridge
  * to keep that file under the 150-LOC ceiling.
  */
 internal fun loadFromWire(handle: Long): PlaylistBridge.Loaded {
@@ -58,6 +58,7 @@ internal fun loadFromWire(handle: Long): PlaylistBridge.Loaded {
         val fadeInTension = buf.float
         val fadeOutMs = buf.float
         val fadeOutTension = buf.float
+        val gain = buf.float
         clips.add(ClipView(
             id = i.toLong(),
             track = track,
@@ -72,6 +73,7 @@ internal fun loadFromWire(handle: Long): PlaylistBridge.Loaded {
             fadeInTension = fadeInTension,
             fadeOutMs = fadeOutMs,
             fadeOutTension = fadeOutTension,
+            gain = gain,
         ))
     }
 
@@ -95,7 +97,7 @@ internal fun loadFromWire(handle: Long): PlaylistBridge.Loaded {
         ))
     }
 
-    Log.i(TAG, "playlist v3 loaded: tracks=$trackCount patterns=$patternCount " +
+    Log.i(TAG, "playlist v4 loaded: tracks=$trackCount patterns=$patternCount " +
                "clips=$clipCount markers=$markerCount arr=$currentArrangement")
     return PlaylistBridge.Loaded(trackCount, patternCount, currentArrangement, barNum, clips, markers)
 }

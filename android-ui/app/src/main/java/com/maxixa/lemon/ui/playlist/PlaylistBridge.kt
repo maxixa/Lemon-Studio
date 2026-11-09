@@ -6,12 +6,13 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 /**
- * Playlist wire (v2). Must match crates/lemon-engine-ffi/src/playlist.rs.
+ * Playlist wire (v4). Must match crates/lemon-engine-ffi/src/playlist.rs.
  *
  * Header 32B: magic, version, track_count, pattern_count, clip_count,
  *             marker_count, current_arrangement, bar_num
- * Clip   48B: track, position, length, source_kind, source_ref, muted,
- *             window_lo, window_hi, reserved[16]
+ * Clip   52B: track, position, length, source_kind, source_ref, muted,
+ *             window_lo, window_hi, fade_in_ms, fade_in_tension,
+ *             fade_out_ms, fade_out_tension, gain
  * Marker 52B: position, kind, numerator, denominator, scale, name[32]
  *
  * `source_kind` and `window_lo`/`window_hi` are preserved verbatim: read
@@ -21,11 +22,11 @@ import java.nio.ByteOrder
  */
 object PlaylistBridge {
     private const val HEADER = 32
-    private const val CLIP = 48
+    private const val CLIP = 52
     private const val MARKER = 52
     private const val MARKER_NAME_BYTES = 32
     private const val MAGIC: Int = 0x4C454D32.toInt()  // "LEM2"
-    private const val VERSION = 3
+    private const val VERSION = 4
     private const val TAG = "Lemon"
 
     data class Loaded(
@@ -72,6 +73,7 @@ object PlaylistBridge {
             buf.putFloat(c.fadeInTension)
             buf.putFloat(c.fadeOutMs)
             buf.putFloat(c.fadeOutTension)
+            buf.putFloat(c.gain)
         }
 
         for (m in markers) {

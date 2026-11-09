@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import com.maxixa.lemon.LemonEngineBridge
 import com.maxixa.lemon.state.EngineController
 import com.maxixa.lemon.ui.theme.BgDeep
+import com.maxixa.lemon.state.LocalSettings
 
 /**
  * Playlist screen — orchestration only.
@@ -20,7 +21,8 @@ fun PlaylistScreen(
     engine: EngineController,
     onBack: () -> Unit,
 ) {
-    val state = remember { PlaylistState() }
+    val settings = LocalSettings.current
+    val state = remember { PlaylistState(settings) }
     val sync = rememberPlaylistSync(handle, engine, state)
 
     var showAdd by remember { mutableStateOf(false) }

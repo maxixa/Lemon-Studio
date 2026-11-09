@@ -69,7 +69,7 @@ fun PlaylistCanvas(
         }
 
         // Clips
-        drawPlaylistClips(state, audioClipPeaks, automationPoints, pxPerTick)
+        drawPlaylistClips(state, audioClipPeaks, automationPoints, pxPerTick, textMeasurer)
 
         // Markers (flags + lines) drawn after clips so flags stay visible
         drawMarkers(state.markers, state.scrollX, pxPerTick, HEADER_W, textMeasurer)

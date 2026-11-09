@@ -16,6 +16,33 @@ class SettingsStore(ctx: Context) {
         uiScale.floatValue = clamped
         prefs.edit().putFloat("ui_scale", clamped).apply()
     }
+
+    // ─── Piano roll scale lock ──────────────────────────────────
+
+    var scaleLockEnabled: Boolean
+        get() = prefs.getBoolean("scale_lock_enabled", false)
+        set(v) { prefs.edit().putBoolean("scale_lock_enabled", v).apply() }
+
+    var scaleRoot: Int
+        get() = prefs.getInt("scale_root", 0)
+        set(v) { prefs.edit().putInt("scale_root", v).apply() }
+
+    var scaleType: Int
+        get() = prefs.getInt("scale_type", 0)
+        set(v) { prefs.edit().putInt("scale_type", v).apply() }
+
+    // ─── Playlist ───────────────────────────────────────────────
+
+    var barsVisible: Float
+        get() = prefs.getFloat("bars_visible", 4f).coerceIn(1f, 32f)
+        set(v) {
+            val c = v.coerceIn(1f, 32f)
+            prefs.edit().putFloat("bars_visible", c).apply()
+        }
+
+    var trimMode: Boolean
+        get() = prefs.getBoolean("trim_mode", false)
+        set(v) { prefs.edit().putBoolean("trim_mode", v).apply() }
 }
 
 /** Provided in MainActivity; read from any composable that needs settings. */

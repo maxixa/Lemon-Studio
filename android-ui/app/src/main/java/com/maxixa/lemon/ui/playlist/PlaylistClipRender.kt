@@ -5,6 +5,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.TextMeasurer
 import com.maxixa.lemon.ui.theme.AccentAmber
 import com.maxixa.lemon.ui.theme.AccentCyan
 import com.maxixa.lemon.ui.theme.TrackColors
@@ -14,17 +15,16 @@ private const val ROW_H = 36f
 
 /**
  * Per-clip rendering — extracted from PlaylistCanvas to keep that file
- * under the 150-LOC ceiling. Loop body is verbatim from the source
- * file (brace-counted extraction).
+ * under the 150-LOC ceiling.
  */
 internal fun DrawScope.drawPlaylistClips(
     state: PlaylistState,
     audioClipPeaks: Map<Int, FloatArray>,
     automationPoints: Map<Int, List<Pair<Double, Double>>>,
     pxPerTick: Float,
+    textMeasurer: TextMeasurer,
 ) {
     for (c in state.clips) {
-
         val x = HEADER_W + ((c.position - state.scrollX) * pxPerTick)
         val w = (c.length * pxPerTick).coerceAtLeast(6f)
         val y = (c.track - state.scrollY) * ROW_H
@@ -48,32 +48,35 @@ internal fun DrawScope.drawPlaylistClips(
                     points = autoPts,
                     fromBeat = fromBeat,
                     clipBeats = clipBeats,
-                    x = x + 1f,
-                    y = y + 1f,
-                    w = (w - 6f).coerceAtLeast(0f),
-                    h = h,
+                    x = x + 1f, y = y + 1f,
+                    w = (w - 6f).coerceAtLeast(0f), h = h,
                 )
             } else {
                 val peaks = audioClipPeaks[c.pattern]
                 if (peaks != null && peaks.isNotEmpty()) {
                     drawAudioWaveform(
                         peaks = peaks,
-                        x = x + 1f,
-                        y = y + 1f,
-                        w = (w - 6f).coerceAtLeast(0f),
-                        h = h,
+                        x = x + 1f, y = y + 1f,
+                        w = (w - 6f).coerceAtLeast(0f), h = h,
                         color = Color.White.copy(alpha = 0.4f),
                     )
                 }
             }
+            drawGainIndicator(c, x, y + 1f, w, h, textMeasurer)
         }
         if (c.sourceKind == 1) {
             drawFadeCurves(c, x, y + 1f, w, h, state.bpm, state.ppq)
-            if (state.trimMode) drawFadeHandles(c, x, y + 1f, w, h)
+            if (state.trimMode) {
+                drawFadeHandles(c, x, y + 1f, w, h)
+                drawTrimHandles(c, x, y + 1f, w, h)
+                if (state.fadeDragClipId == c.id) {
+                    drawFadeDragOverlay(c, x, y + 1f, w, h,
+                        state.bpm, state.ppq, state.fadeDragIsIn)
+                }
+            }
         }
         if (c.selected) {
             drawRect(Color.White, Offset(x, y + 1f), Size(w, h), style = Stroke(2f))
         }
-
     }
 }

@@ -32,4 +32,5 @@ data class ClipView(
     val fadeInTension: Float = 0f,
     val fadeOutMs: Float = 0f,
     val fadeOutTension: Float = 0f,
+    val gain: Float = 1f,
 )

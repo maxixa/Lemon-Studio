@@ -5,10 +5,11 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Rect
+import com.maxixa.lemon.state.SettingsStore
 
 enum class PlaylistTool { Pencil, Select }
 
-class PlaylistState {
+class PlaylistState(private val store: SettingsStore? = null) {
     var trackCount by mutableStateOf(8)
     var patternCount by mutableStateOf(0)
     var defaultPattern by mutableStateOf(1)
@@ -95,8 +96,26 @@ class PlaylistState {
     /** Auto-follow playhead while playing. */
     var autoFollow by mutableStateOf(true)
     /** How many bars fit in the visible viewport. */
-    var barsVisible by mutableStateOf(4f)
-    var trimMode by mutableStateOf(false)
+    private var _barsVisible by mutableStateOf(store?.barsVisible ?: 4f)
+    var barsVisible: Float
+        get() = _barsVisible
+        set(v) {
+            _barsVisible = v
+            store?.barsVisible = v
+        }
+    private var _trimMode by mutableStateOf(store?.trimMode ?: false)
+    var trimMode: Boolean
+        get() = _trimMode
+        set(v) {
+            _trimMode = v
+            store?.trimMode = v
+        }
+    /** Clip ID currently being fade-dragged; null when no fade drag active. */
+    var fadeDragClipId by mutableStateOf<Long?>(null)
+    /** True when dragging the fade-IN handle; false for fade-out. */
+    var fadeDragIsIn by mutableStateOf(true)
+    /** Clip ID currently being gain-dragged; null when idle. */
+    var gainDragClipId by mutableStateOf<Long?>(null)
     var automationEditorChannelIdx by mutableStateOf<Int?>(null)
     var automationClipChannels by mutableStateOf<Set<Int>>(emptySet())
     var bpm by mutableStateOf(120f)
