@@ -42,6 +42,9 @@ lemon-soft-clipper        = { path = "../../plugins/lemon-soft-clipper",        
 lemon-stereo-enhancer     = { path = "../../plugins/lemon-stereo-enhancer",     features = ["linked"] }
 lemon-stereo-shaper       = { path = "../../plugins/lemon-stereo-shaper",       features = ["linked"] }
 lemon-transient-processor = { path = "../../plugins/lemon-transient-processor", features = ["linked"] }
+lemon-flanger                = { path = "../../plugins/lemon-flanger",                features = ["linked"] }
+lemon-phaser                 = { path = "../../plugins/lemon-phaser",                 features = ["linked"] }
+lemon-vocoder                = { path = "../../plugins/lemon-vocoder",                features = ["linked"] }
 [[bin]]
 name = "audiotest"
 path = "src/bin/audiotest.rs"

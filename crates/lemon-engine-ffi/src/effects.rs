@@ -27,6 +27,9 @@ pub const CATALOG: &[(&str, &str)] = &[
     ("stereo_enhancer", "Lemon Stereo Enhancer"),
     ("stereo_shaper",   "Lemon Stereo Shaper"),
     ("transient",       "Lemon Transient Processor"),
+    ("flanger",         "Lemon Flanger"),
+    ("phaser",          "Lemon Phaser"),
+    ("vocoder",         "Lemon Vocoder"),
 ];
 
 static REVERB:     OnceLock<Option<Arc<os_clap::Library>>> = OnceLock::new();
@@ -41,6 +44,9 @@ static SOFT_CLIP:  OnceLock<Option<Arc<os_clap::Library>>> = OnceLock::new();
 static STEREO_ENH: OnceLock<Option<Arc<os_clap::Library>>> = OnceLock::new();
 static STEREO_SHP: OnceLock<Option<Arc<os_clap::Library>>> = OnceLock::new();
 static TRANSIENT:  OnceLock<Option<Arc<os_clap::Library>>> = OnceLock::new();
+static FLANGER:    OnceLock<Option<Arc<os_clap::Library>>> = OnceLock::new();
+static PHASER:     OnceLock<Option<Arc<os_clap::Library>>> = OnceLock::new();
+static VOCODER:    OnceLock<Option<Arc<os_clap::Library>>> = OnceLock::new();
 
 fn lib_for(name: &str) -> Option<Arc<os_clap::Library>> {
     let path = PathBuf::from("linked-effect");
@@ -57,6 +63,9 @@ fn lib_for(name: &str) -> Option<Arc<os_clap::Library>> {
         "stereo_enhancer" => (&STEREO_ENH, &lemon_stereo_enhancer::LINKED_CLAP_ENTRY as *const _ as *const _),
         "stereo_shaper"   => (&STEREO_SHP, &lemon_stereo_shaper::LINKED_CLAP_ENTRY as *const _ as *const _),
         "transient"       => (&TRANSIENT,  &lemon_transient_processor::LINKED_CLAP_ENTRY as *const _ as *const _),
+        "flanger"         => (&FLANGER,    &lemon_flanger::LINKED_CLAP_ENTRY as *const _ as *const _),
+        "phaser"          => (&PHASER,     &lemon_phaser::LINKED_CLAP_ENTRY as *const _ as *const _),
+        "vocoder"         => (&VOCODER,    &lemon_vocoder::LINKED_CLAP_ENTRY as *const _ as *const _),
         _ => return None,
     };
     cell.get_or_init(|| unsafe {
