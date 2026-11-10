@@ -87,9 +87,25 @@ pub struct EngineHandle {
     pub bypassed: HashSet<(u16, u8)>,
     pub undo_stack: Vec<Snapshot>,
     pub redo_stack: Vec<Snapshot>,
-}
+
+    pub bus_tracks: HashSet<u16>,}
 
 impl EngineHandle {
+
+    pub fn is_bus(&self, track: u16) -> bool {
+        self.bus_tracks.contains(&track)
+    }
+
+    pub fn set_bus(&mut self, track: u16, is_bus: bool) -> bool {
+        if is_bus { self.bus_tracks.insert(track) } else { self.bus_tracks.remove(&track) }
+    }
+
+    pub fn bus_list(&self) -> Vec<u16> {
+        let mut v: Vec<u16> = self.bus_tracks.iter().copied().collect();
+        v.sort_unstable();
+        v
+    }
+
     pub fn new() -> Self {
         Self {
             engine: None,
@@ -111,7 +127,8 @@ impl EngineHandle {
             bypassed: HashSet::new(),
             undo_stack: Vec::new(),
             redo_stack: Vec::new(),
-        }
+        
+            bus_tracks: HashSet::new(),}
     }
 
     pub fn load_project(&mut self, path: &str, factory: Option<PathBuf>) -> Result<(), String> {

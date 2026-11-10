@@ -24,6 +24,7 @@ fun MixerScreen(
     engine: EngineController,
     onBack: () -> Unit,
 ) {
+    var busSet by remember { mutableStateOf(engine.busList().toSet()) }
     var tracks by remember { mutableStateOf<List<MixerTrackView>>(emptyList()) }
     var slots by remember { mutableStateOf<Map<Int, List<String>>>(emptyMap()) }
     var bypassed by remember { mutableStateOf<Map<Int, Set<Int>>>(emptyMap()) }
@@ -76,7 +77,12 @@ fun MixerScreen(
                     },
                     onSlotTap = { slot -> showPicker = idx to slot },
                     onSendsTap = { showRouting = idx },
-                )
+                    isBus = idx in busSet,
+                    onToggleBus = {
+                        val now = !(idx in busSet)
+                        engine.setBus(idx, now)
+                        busSet = if (now) busSet + idx else busSet - idx
+                    },)
                 Spacer(Modifier.width(4.dp))
             }
         }

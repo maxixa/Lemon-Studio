@@ -1614,6 +1614,55 @@ pub extern "system" fn Java_com_maxixa_lemon_LemonEngineBridge_engineMixerSetSen
 }
 
 #[unsafe(no_mangle)]
+pub extern "system" fn Java_com_maxixa_lemon_LemonEngineBridge_engineMixerIsBus<'caller>(
+    mut unowned_env: EnvUnowned<'caller>,
+    _class: JClass<'caller>,
+    handle: jlong,
+    track: jint,
+) -> jboolean {
+    unowned_env.with_env(|_env| -> jni::errors::Result<jboolean> {
+        if handle == 0 { return Ok(false); }
+        let engine = unsafe { &*(handle as *const EngineHandle) };
+        Ok(engine.is_bus(track as u16))
+    }).resolve::<ThrowRuntimeExAndDefault>()
+}
+
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_maxixa_lemon_LemonEngineBridge_engineMixerSetBus<'caller>(
+    mut unowned_env: EnvUnowned<'caller>,
+    _class: JClass<'caller>,
+    handle: jlong,
+    track: jint,
+    is_bus: jboolean,
+) -> jboolean {
+    unowned_env.with_env(|_env| -> jni::errors::Result<jboolean> {
+        if handle == 0 { return Ok(false); }
+        let engine = unsafe { &mut *(handle as *mut EngineHandle) };
+        engine.set_bus(track as u16, is_bus);
+        Ok(true)
+    }).resolve::<ThrowRuntimeExAndDefault>()
+}
+
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_maxixa_lemon_LemonEngineBridge_engineMixerBusList<'caller>(
+    mut unowned_env: EnvUnowned<'caller>,
+    _class: JClass<'caller>,
+    handle: jlong,
+) -> JByteArray<'caller> {
+    unowned_env.with_env(|env| -> jni::errors::Result<JByteArray> {
+        let empty = env.byte_array_from_slice(&[])?;
+        if handle == 0 { return Ok(empty); }
+        let engine = unsafe { &*(handle as *const EngineHandle) };
+        let buses = engine.bus_list();
+        let mut bytes: Vec<u8> = Vec::with_capacity(4 + buses.len() * 2);
+        bytes.extend_from_slice(&(buses.len() as u32).to_le_bytes());
+        for b in buses { bytes.extend_from_slice(&b.to_le_bytes()); }
+        env.byte_array_from_slice(&bytes)
+    }).resolve::<ThrowRuntimeExAndDefault>()
+}
+
+
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_com_maxixa_lemon_LemonEngineBridge_engineAddAutomationChannel<'caller>(
     mut unowned_env: EnvUnowned<'caller>,
     _class: JClass<'caller>,

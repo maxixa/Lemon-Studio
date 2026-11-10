@@ -24,6 +24,8 @@ fun MixerStrip(
     onPan: (Float) -> Unit,
     onSlotTap: (Int) -> Unit,
     onSendsTap: () -> Unit = {},
+    isBus: Boolean = false,
+    onToggleBus: () -> Unit = {},
 ) {
     Column(
         Modifier.width(72.dp).fillMaxHeight()
@@ -31,13 +33,34 @@ fun MixerStrip(
             .padding(4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(
-            if (isMaster) "MASTER" else track.name,
-            color = if (isMaster) AccentOrange else TextPrimary,
-            fontSize = 9.sp,
-            fontWeight = if (isMaster) FontWeight.Bold else FontWeight.SemiBold,
-            maxLines = 1,
-        )
+        Row(verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(
+                if (isMaster) "MASTER" else track.name,
+                color = if (isMaster) AccentOrange else TextPrimary,
+                fontSize = 9.sp,
+                fontWeight = if (isMaster) FontWeight.Bold else FontWeight.SemiBold,
+                maxLines = 1,
+                modifier = Modifier.weight(1f),
+            )
+            if (!isMaster) {
+                Spacer(Modifier.width(2.dp))
+                Text(
+                    "B",
+                    color = if (isBus) BgDeep else TextMuted.copy(alpha = 0.3f),
+                    fontSize = 8.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .background(
+                            if (isBus) AccentAmber else BorderSubtle,
+                            RoundedCornerShape(2.dp),
+                        )
+                        .clickable { onToggleBus() }
+                        .padding(horizontal = 3.dp, vertical = 1.dp),
+                )
+            }
+        }
         Spacer(Modifier.height(2.dp))
 
         // Effect slots (4 visible)
