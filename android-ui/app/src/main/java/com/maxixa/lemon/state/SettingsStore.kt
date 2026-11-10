@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.compose.runtime.MutableFloatState
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 
 class SettingsStore(ctx: Context) {
     private val prefs = ctx.getSharedPreferences("lemon-settings", Context.MODE_PRIVATE)
@@ -43,6 +44,14 @@ class SettingsStore(ctx: Context) {
     var trimMode: Boolean
         get() = prefs.getBoolean("trim_mode", false)
         set(v) { prefs.edit().putBoolean("trim_mode", v).apply() }
+
+    private val _showGhosts = mutableStateOf(prefs.getBoolean("show_ghosts", false))
+    var showGhosts: Boolean
+        get() = _showGhosts.value
+        set(v) {
+            _showGhosts.value = v
+            prefs.edit().putBoolean("show_ghosts", v).apply()
+        }
 }
 
 /** Provided in MainActivity; read from any composable that needs settings. */

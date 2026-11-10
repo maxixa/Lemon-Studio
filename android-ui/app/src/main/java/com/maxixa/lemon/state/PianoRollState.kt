@@ -37,7 +37,13 @@ class PianoRollState(private val store: SettingsStore? = null) {
     internal var nextId = 1L
     internal var clipboard: List<NoteView> = emptyList()
     var selectionRect by mutableStateOf<Rect?>(null)
-    var showGhosts by mutableStateOf(false)
+    private var _showGhosts by mutableStateOf(store?.showGhosts ?: false)
+    var showGhosts: Boolean
+        get() = _showGhosts
+        set(v) {
+            _showGhosts = v
+            store?.showGhosts = v
+        }
     private var _scaleLockEnabled by mutableStateOf(store?.scaleLockEnabled ?: false)
     var scaleLockEnabled: Boolean
         get() = _scaleLockEnabled
