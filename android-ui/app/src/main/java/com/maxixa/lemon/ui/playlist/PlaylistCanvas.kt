@@ -1,5 +1,6 @@
 package com.maxixa.lemon.ui.playlist
 
+import com.maxixa.lemon.data.NoteView
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -25,6 +26,7 @@ fun PlaylistCanvas(
     audioClipPeaks: Map<Int, FloatArray> = emptyMap(),
     automationPoints: Map<Int, List<Pair<Double, Double>>> = emptyMap(),
     modifier: Modifier = Modifier,
+    patternNotes: Map<Int, List<NoteView>>,
 ) {
     val textMeasurer = rememberTextMeasurer()
     Canvas(modifier.fillMaxSize().playlistGestures(state, onCommit, onLoopRangeChange)) {
@@ -69,7 +71,7 @@ fun PlaylistCanvas(
         }
 
         // Clips
-        drawPlaylistClips(state, audioClipPeaks, automationPoints, pxPerTick, textMeasurer)
+        drawPlaylistClips(state, audioClipPeaks, automationPoints, patternNotes, pxPerTick, textMeasurer)
 
         // Markers (flags + lines) drawn after clips so flags stay visible
         drawMarkers(state.markers, state.scrollX, pxPerTick, HEADER_W, textMeasurer)

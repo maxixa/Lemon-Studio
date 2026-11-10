@@ -113,3 +113,53 @@ private fun decodePianoBlock(bytes: ByteArray): List<NoteView> {
     return out
 }
 
+/**
+ * Mini piano-roll inside a pattern clip.
+ *
+ * Key range is auto-fit to the notes present in this specific pattern
+ * (min..max key), so a 2-octave pattern reads clearly instead of looking
+ * like a thin sliver in a 10-octave absolute frame. Note height clamps to
+ * 1.5dp floor / half-row ceiling so single-note patterns still show.
+ *
+ * `windowLo` from the clip is subtracted so trimmed pattern clips cull
+ * correctly at the pixel level.
+ */
+internal fun DrawScope.drawPatternNotes(
+    notes: List<NoteView>,
+    windowLo: Float,
+    clipLengthTicks: Int,
+    x: Float,
+    y: Float,
+    w: Float,
+    h: Float,
+    pxPerTick: Float,
+    color: Color,
+) {
+    if (notes.isEmpty() || w <= 4f || h <= 4f || pxPerTick <= 0f) return
+    val keyMin = notes.minOf { it.key }
+    val keyMax = notes.maxOf { it.key }
+    val keyRange = (keyMax - keyMin).coerceAtLeast(1)
+    val padY = 2f
+    val innerY = y + padY
+    val innerH = h - 2 * padY
+    if (innerH <= 2f) return
+    val rowH = innerH / keyRange.toFloat()
+    val noteH = rowH.coerceIn(1.5f, innerH / 2f)
+    val xLo = x
+    val xHi = x + w
+    for (n in notes) {
+        // clip culling: pattern-tick within visible window
+        if (n.position >= clipLengthTicks) continue
+        val nx = x + (n.position - windowLo) * pxPerTick
+        val nw = (n.length * pxPerTick).coerceAtLeast(1.5f)
+        if (nx + nw < xLo || nx > xHi) continue
+        val t = (n.key - keyMin).toFloat() / keyRange
+        val ny = innerY + (1f - t) * innerH - noteH * 0.5f
+        val clippedX = nx.coerceAtLeast(xLo)
+        val clippedW = (nx + nw).coerceAtMost(xHi) - clippedX
+        if (clippedW < 0.5f) continue
+        drawRect(color, androidx.compose.ui.geometry.Offset(clippedX, ny),
+                 androidx.compose.ui.geometry.Size(clippedW, noteH))
+    }
+}
+

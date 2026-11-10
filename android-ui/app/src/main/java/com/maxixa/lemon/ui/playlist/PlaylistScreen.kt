@@ -106,7 +106,7 @@ onAddAutomation = { showAddAutomation = true },
             audioClipPeaks = sync.audioClipPeaks,
             automationPoints = sync.automationPoints,
             modifier = Modifier.weight(1f),
-        )
+                patternNotes = sync.patternNotes,)
     }
 
     PlaylistDialogHost(
