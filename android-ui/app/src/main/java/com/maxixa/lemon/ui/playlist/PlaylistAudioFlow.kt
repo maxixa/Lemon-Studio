@@ -67,7 +67,7 @@ fun rememberAudioClipFlow(
         }
     }
     return {
-        Log.d(TAG, "audio clip: launching picker (audio/* + */*)")
+        Log.i(TAG, "audio clip: launching picker (audio/* + */*)")
         launcher.launch(arrayOf("audio/*", "*/*"))
     }
 }

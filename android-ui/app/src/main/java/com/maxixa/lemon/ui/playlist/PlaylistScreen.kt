@@ -136,5 +136,13 @@ onAddAutomation = { showAddAutomation = true },
         onDismissLoop = { showLoopDialog = false },
         commit = commit,
         onReloadTick = sync.bumpReloadTick,
+        onAddAudioClip = {
+            showAdd = false
+            launchAudioPicker()
+        },
+        onAddAutomationClip = {
+            showAdd = false
+            showAddAutomation = true
+        },
     )
 }

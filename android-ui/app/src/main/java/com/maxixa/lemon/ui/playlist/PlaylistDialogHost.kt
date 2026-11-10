@@ -21,6 +21,8 @@ fun PlaylistDialogHost(
     showAdd: Boolean,
     onDismissAdd: () -> Unit,
     onAddClip: (Int) -> Unit,
+    onAddAudioClip: () -> Unit,
+    onAddAutomationClip: () -> Unit,
     showAddAutomation: Boolean,
     onDismissAddAutomation: () -> Unit,
     onCreateAutomation: (target: Int, value: Double) -> Unit,
@@ -34,6 +36,8 @@ fun PlaylistDialogHost(
         AddClipDialog(
             patternNames = patternNames,
             onPick = onAddClip,
+            onPickAudio = onAddAudioClip,
+            onPickAutomation = onAddAutomationClip,
             onDismiss = onDismissAdd,
         )
     }
