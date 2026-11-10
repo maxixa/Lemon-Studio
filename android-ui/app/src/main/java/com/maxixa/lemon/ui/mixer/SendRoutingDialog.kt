@@ -1,6 +1,7 @@
 package com.maxixa.lemon.ui.mixer
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -59,6 +60,25 @@ fun SendRoutingDialog(
             Column(Modifier.fillMaxWidth().heightIn(max = 420.dp).verticalScroll(rememberScrollState())) {
                 Text("Route this track's signal to other mixer tracks.",
                     color = TextMuted, fontSize = 11.sp)
+                Spacer(Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    QuickBtn("Master only") {
+                        sends = trackNames.indices
+                            .filter { it != trackId }
+                            .associateWith { if (it == 0) 1f else 0f }
+                    }
+                    QuickBtn("Unity all") {
+                        sends = trackNames.indices
+                            .filter { it != trackId }
+                            .associateWith { 1f }
+                    }
+                    QuickBtn("Clear") {
+                        sends = trackNames.indices
+                            .filter { it != trackId }
+                            .associateWith { 0f }
+                    }
+                    QuickBtn("Revert") { sends = initial }
+                }
                 Spacer(Modifier.height(10.dp))
 
                 for (dest in trackNames.indices) {
@@ -78,11 +98,16 @@ fun SendRoutingDialog(
                             modifier = Modifier.weight(1f),
                         )
                         Text(
-                            "${(level * 100).toInt()}%",
+                            "${(level * 100).toInt()}% · ${dbString(level)}",
                             color = if (level > 0.001f) AccentCyan else TextMuted,
                             fontSize = 11.sp,
                             fontFamily = FontFamily.Monospace,
                             fontWeight = FontWeight.Bold,
+                            modifier = Modifier.clickable {
+                                sends = sends.toMutableMap().also {
+                                    it[dest] = if (level < 0.001f) 1f else 0f
+                                }
+                            },
                         )
                     }
                     Slider(
@@ -122,3 +147,25 @@ fun SendRoutingDialog(
         },
     )
 }
+
+/** Linear 0..1 → dB label. 100% = 0 dB, 50% ≈ −6 dB, 0.1% ≈ −60 dB. */
+private fun dbString(level: Float): String {
+    if (level < 0.001f) return "-inf"
+    val db = 20.0 * kotlin.math.log10(level.toDouble())
+    return if (db >= 0.0) "+%.1f".format(db) else "%.1f".format(db)
+}
+
+@androidx.compose.runtime.Composable
+private fun QuickBtn(label: String, onClick: () -> Unit) {
+    Text(
+        label,
+        color = AccentCyan,
+        fontSize = 10.sp,
+        fontWeight = FontWeight.Bold,
+        modifier = Modifier
+            .background(BgRaised, RoundedCornerShape(4.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+    )
+}
+
