@@ -51,7 +51,7 @@ internal fun rememberExportLaunchers(
                     return@launch
                 }
                 pfd.use {
-                    val result = exportController.export(it.fd, pend.songMode, pend.rate, pend.format)
+                    val result = exportController.export(it.fd, pend.songMode, pend.rate, pend.format, pend.wavBits)
                     snackbarHost.showSnackbar(result.message)
                 }
             } catch (t: Throwable) {
@@ -90,7 +90,7 @@ internal fun rememberExportLaunchers(
                 val mixUri = createFile("mix.wav")
                 if (mixUri != null) {
                     ctx.contentResolver.openFileDescriptor(mixUri, "w")?.use { pfd ->
-                        exportController.export(pfd.fd, pend.songMode, pend.rate, ExportFormat.Wav)
+                        exportController.export(pfd.fd, pend.songMode, pend.rate, ExportFormat.Wav, pend.wavBits)
                     }
                 }
 

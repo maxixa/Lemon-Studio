@@ -34,7 +34,7 @@ internal fun DawDialogsMain(
     showExportDialog: Boolean,
     onDismissExportDialog: () -> Unit,
     onPendingExport: (ExportRequest) -> Unit,
-    onWithStems: (Boolean, ExportFormat) -> Unit,
+    onWithStems: (Boolean, ExportFormat, Int) -> Unit,
     showTempoDialog: Boolean,
     onDismissTempoDialog: () -> Unit,
     showTimeSigDialog: Boolean,
@@ -51,10 +51,10 @@ internal fun DawDialogsMain(
 ) {
     if (showExportDialog) {
         ExportDialog(
-            onConfirm = { song, rate, fmt, withStems ->
-                onPendingExport(ExportRequest(song, rate, fmt, withStems))
+            onConfirm = { song, rate, fmt, withStems, wavBits ->
+                onPendingExport(ExportRequest(song, rate, fmt, withStems, wavBits))
                 onDismissExportDialog()
-                onWithStems(withStems, fmt)
+                onWithStems(withStems, fmt, wavBits)
             },
             onDismiss = onDismissExportDialog,
         )

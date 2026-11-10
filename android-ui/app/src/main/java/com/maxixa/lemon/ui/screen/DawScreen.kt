@@ -30,7 +30,8 @@ internal data class ExportRequest(
     val rate: Int,
     val format: ExportFormat,
     val withStems: Boolean,
-)
+        val wavBits: Int = 32,
+    )
 
 @Composable
 fun DawScreen(onOpenSettings: () -> Unit = {}) {
@@ -192,7 +193,7 @@ fun DawScreen(onOpenSettings: () -> Unit = {}) {
             showExportDialog = showExportDialog,
             onDismissExportDialog = { showExportDialog = false },
             onPendingExport = { pendingExport = it },
-            onWithStems = { withStems, fmt ->
+            onWithStems = { withStems, fmt, wavBits ->
                 if (withStems) exportLaunchers.treePicker.launch(null)
                 else exportLaunchers.createDoc.launch("lemon-export.${fmt.ext}")
             },

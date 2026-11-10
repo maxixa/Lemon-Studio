@@ -20,12 +20,13 @@ import com.maxixa.lemon.state.*
 
 @Composable
 fun ExportDialog(
-    onConfirm: (songMode: Boolean, rate: Int, format: ExportFormat, withStems: Boolean) -> Unit,
+    onConfirm: (songMode: Boolean, rate: Int, format: ExportFormat, withStems: Boolean, wavBits: Int) -> Unit,
     onDismiss: () -> Unit,
 ) {
     var songMode by remember { mutableStateOf(true) }
     var rate by remember { mutableStateOf(48000) }
     var format by remember { mutableStateOf(ExportFormat.Wav) }
+    var wavBits by remember { mutableStateOf(32) }
     var withStems by remember { mutableStateOf(false) }
 
     AlertDialog(
@@ -52,6 +53,16 @@ fun ExportDialog(
                     }
                 }
                 Spacer(Modifier.height(12.dp))
+                if (format == ExportFormat.Wav) {
+                    Text("WAV Bit Depth", color = TextMuted, fontSize = 11.sp)
+                    Spacer(Modifier.height(6.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Toggle("16-bit", wavBits == 16) { wavBits = 16 }
+                        Toggle("24-bit", wavBits == 24) { wavBits = 24 }
+                        Toggle("32f",    wavBits == 32) { wavBits = 32 }
+                    }
+                    Spacer(Modifier.height(12.dp))
+                }
                 Text("Sample rate", color = TextMuted, fontSize = 11.sp)
                 Spacer(Modifier.height(6.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -118,7 +129,7 @@ fun ExportDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(songMode, rate, format, withStems) }) {
+            TextButton(onClick = { onConfirm(songMode, rate, format, withStems, wavBits) }) {
                 Text("Export…", color = AccentOrange,
                     fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
             }
