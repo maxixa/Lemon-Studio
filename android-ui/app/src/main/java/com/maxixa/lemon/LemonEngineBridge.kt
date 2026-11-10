@@ -19,6 +19,7 @@ object LemonEngineBridge {
     external fun engineSetLooping(handle: Long, on: Boolean): Boolean
     external fun engineSeek(handle: Long, frames: Long): Boolean
     external fun engineNotesBytes(handle: Long): ByteArray
+    external fun engineAllPatternNotes(handle: Long): ByteArray
     external fun engineCommitNotes(handle: Long, bytes: ByteArray): Boolean
     external fun engineNotesDebug(handle: Long): String
     external fun engineStepMaskBytes(handle: Long, channel: Int): ByteArray

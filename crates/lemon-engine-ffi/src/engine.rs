@@ -234,6 +234,29 @@ impl EngineHandle {
         Some(crate::piano::pack_notes(project.ppq, plen, &pattern.notes))
     }
 
+    /// Enumerate every pattern's notes as a single wire blob.
+    ///
+    /// Wire format (little-endian):
+    ///   u32 num_patterns
+    ///   per pattern:
+    ///     u32 pattern_number
+    ///     u32 block_len
+    ///     block_len bytes = piano::pack_notes output (12-byte header + N×56)
+    pub fn all_pattern_notes_bytes(&self) -> Option<Vec<u8>> {
+        let project = self.project.as_ref()?;
+        let ppq = project.ppq;
+        let plen_default = (ppq as u32).saturating_mul(4).max(1);
+        let mut out: Vec<u8> = Vec::new();
+        out.extend_from_slice(&(project.patterns.len() as u32).to_le_bytes());
+        for p in &project.patterns {
+            let block = crate::piano::pack_notes(ppq, plen_default, &p.notes);
+            out.extend_from_slice(&(p.number as u32).to_le_bytes());
+            out.extend_from_slice(&(block.len() as u32).to_le_bytes());
+            out.extend_from_slice(&block);
+        }
+        Some(out)
+    }
+
     /// Replace pattern #1's notes with the given buffer and rebuild the Engine.
     pub fn commit_notes(&mut self, bytes: &[u8]) -> Result<(), String> {
         self.push_snapshot();

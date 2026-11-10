@@ -309,6 +309,25 @@ pub extern "system" fn Java_com_maxixa_lemon_LemonEngineBridge_engineNotesBytes<
 }
 
 #[unsafe(no_mangle)]
+pub extern "system" fn Java_com_maxixa_lemon_LemonEngineBridge_engineAllPatternNotes<'caller>(
+    mut unowned_env: EnvUnowned<'caller>,
+    _class: JClass<'caller>,
+    handle: jlong,
+) -> JByteArray<'caller> {
+    unowned_env
+        .with_env(|env| -> jni::errors::Result<JByteArray> {
+            let empty = env.byte_array_from_slice(&[])?;
+            if handle == 0 { return Ok(empty); }
+            let engine = unsafe { &*(handle as *const EngineHandle) };
+            match engine.all_pattern_notes_bytes() {
+                Some(bytes) => env.byte_array_from_slice(&bytes),
+                None => Ok(empty),
+            }
+        })
+        .resolve::<ThrowRuntimeExAndDefault>()
+}
+
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_com_maxixa_lemon_LemonEngineBridge_engineCommitNotes<'caller>(
     mut unowned_env: EnvUnowned<'caller>,
     _class: JClass<'caller>,

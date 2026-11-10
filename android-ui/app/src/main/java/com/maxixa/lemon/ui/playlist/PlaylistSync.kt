@@ -2,6 +2,7 @@ package com.maxixa.lemon.ui.playlist
 
 import androidx.compose.runtime.*
 import com.maxixa.lemon.LemonEngineBridge
+import com.maxixa.lemon.data.NoteView
 import com.maxixa.lemon.state.EngineController
 import com.maxixa.lemon.state.TickFrames
 import com.maxixa.lemon.state.*
@@ -19,6 +20,7 @@ data class PlaylistSync(
     val arrangements: List<Pair<Int, String>>,
     val audioClipPeaks: Map<Int, FloatArray>,
     val automationPoints: Map<Int, List<Pair<Double, Double>>>,
+    val patternNotes: Map<Int, List<NoteView>>,
     val reloadTick: Int,
     val bumpReloadTick: () -> Unit,
     val playheadTicks: Int,
@@ -31,6 +33,7 @@ fun rememberPlaylistSync(
     state: PlaylistState,
 ): PlaylistSync {
     var patternNames by remember { mutableStateOf<List<String>>(emptyList()) }
+    var patternNotes by remember { mutableStateOf<Map<Int, List<NoteView>>>(emptyMap()) }
     var arrangements by remember { mutableStateOf<List<Pair<Int, String>>>(emptyList()) }
     var reloadTick by remember { mutableStateOf(0) }
     var audioClipPeaks by remember { mutableStateOf<Map<Int, FloatArray>>(emptyMap()) }
@@ -69,6 +72,9 @@ fun rememberPlaylistSync(
             try { LemonEngineBridge.enginePatternName(handle, i) }
             catch (_: Throwable) { "Pattern ${i + 1}" }
         }
+        patternNotes = try {
+            decodePatternNotes(LemonEngineBridge.engineAllPatternNotes(handle))
+        } catch (_: Throwable) { emptyMap() }
         val arrCount = try { LemonEngineBridge.engineArrangementCount(handle) } catch (_: Throwable) { 0 }
         arrangements = (0 until arrCount).map { i ->
             val num = try { LemonEngineBridge.engineArrangementNumber(handle, i) } catch (_: Throwable) { i }
@@ -104,6 +110,7 @@ fun rememberPlaylistSync(
         arrangements = arrangements,
         audioClipPeaks = audioClipPeaks,
         automationPoints = automationPoints,
+        patternNotes = patternNotes,
         reloadTick = reloadTick,
         bumpReloadTick = { reloadTick++ },
         playheadTicks = playheadTicks,
