@@ -64,6 +64,10 @@ internal fun DrawScope.drawPlaylistClips(
             }
             drawGainIndicator(c, x, y + 1f, w, h, textMeasurer)
         }
+        if (c.sourceKind == 0 && w > 8f) {
+            drawPatternGrid(x + 1f, y + 1f, (w - 6f).coerceAtLeast(0f), h,
+                pxPerTick, state.ppq, state.barTicks(), Color.White.copy(alpha = 0.18f))
+        }
         if (c.sourceKind == 1) {
             drawFadeCurves(c, x, y + 1f, w, h, state.bpm, state.ppq)
             if (state.trimMode) {
