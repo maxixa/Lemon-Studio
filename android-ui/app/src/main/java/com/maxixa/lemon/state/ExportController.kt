@@ -23,12 +23,14 @@ class ExportController(private val handle: Long) {
     var isExporting by mutableStateOf(false)
         private set
 
-    suspend fun export(fd: Int, songMode: Boolean, rate: Int, format: ExportFormat): ExportResult =
+    suspend fun export(fd: Int, songMode: Boolean, rate: Int, format: ExportFormat,
+        bits: Int = 32,
+    ): ExportResult =
         withContext(Dispatchers.IO) {
             isExporting = true
             try {
                 val bytes = when (format) {
-                    ExportFormat.Wav  -> LemonEngineBridge.engineExportWav(handle, fd, songMode, rate) * 4L
+                    ExportFormat.Wav  -> LemonEngineBridge.engineExportWav(handle, fd, songMode, rate, bits) * 4L
                     ExportFormat.Flac -> LemonEngineBridge.engineExportFlac(handle, fd, songMode, rate) * 6L
                     ExportFormat.Mp3  -> LemonEngineBridge.engineExportMp3(handle, fd, songMode, rate, 192)
                     ExportFormat.Midi -> LemonEngineBridge.engineExportMidi(handle, fd, songMode)

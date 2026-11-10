@@ -2531,7 +2531,7 @@ impl EngineHandle {
             if i == 0 || i == track as usize { continue; }
             t.volume = Some(0.0);
         }
-        let stats = crate::export::render_wav_to_fd(&stem, fd, song_mode, rate)?;
+        let stats = crate::export::render_wav_to_fd(&stem, fd, song_mode, rate, 32)?;
         log::info!(
             "stem render OK: track={track} {} frames ({:.2}s)",
             stats.frames, stats.seconds

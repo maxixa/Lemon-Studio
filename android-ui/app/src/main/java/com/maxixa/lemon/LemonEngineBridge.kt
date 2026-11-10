@@ -47,7 +47,7 @@ object LemonEngineBridge {
     external fun engineMixerSetPan(handle: Long, track: Int, v: Double): Boolean
     external fun engineMixerGetSendsBytes(handle: Long, track: Int): ByteArray
     external fun engineMixerSetSendLevel(handle: Long, track: Int, dest: Int, level: Double): Boolean
-    external fun engineExportWav(handle: Long, fd: Int, songMode: Boolean, rate: Int): Long
+    external fun engineExportWav(handle: Long, fd: Int, songMode: Boolean, rate: Int, bits: Int): Long
     external fun engineTempo(handle: Long): Double
     external fun engineSetTempo(handle: Long, bpm: Double): Boolean
     external fun engineChannelEnabled(handle: Long, channel: Int): Boolean

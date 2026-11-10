@@ -60,6 +60,7 @@ pub fn render_wav_to_fd(
     fd: i32,
     song_mode: bool,
     rate: u32,
+    bits: u32,
 ) -> Result<Stats, String> {
     if rate == 0 { return Err("rate must be > 0".into()); }
     let dup = dup_fd(fd)?;
@@ -68,8 +69,14 @@ pub fn render_wav_to_fd(
     log::info!("render WAV: rate={rate} song_mode={song_mode}");
     let (audio, stats) = render_audio(project, song_mode, rate);
 
-    os_engine::wav::write_f32_stereo(&mut out, rate, &audio)
-        .map_err(|e| format!("wav write: {e}"))?;
+    match bits {
+        16 => write_i16_wav(&mut out, rate, &audio)
+                .map_err(|e| format!("wav i16 write: {e}"))?,
+        24 => write_i24_wav(&mut out, rate, &audio)
+                .map_err(|e| format!("wav i24 write: {e}"))?,
+        _  => os_engine::wav::write_f32_stereo(&mut out, rate, &audio)
+                .map_err(|e| format!("wav write: {e}"))?,
+    }
 
     log::info!(
         "WAV done: {} frames ({:.2}s) peak {:.4}",
@@ -207,3 +214,50 @@ pub fn render_midi_to_fd(
         peak: 1.0,
     })
 }
+
+fn write_i16_wav<W: std::io::Write>(out: &mut W, rate: u32, audio: &[f32]) -> std::io::Result<()> {
+    let n = audio.len() as u32;
+    let data_bytes = n * 2;
+    out.write_all(b"RIFF")?;
+    out.write_all(&(36u32 + data_bytes).to_le_bytes())?;
+    out.write_all(b"WAVE")?;
+    out.write_all(b"fmt ")?;
+    out.write_all(&16u32.to_le_bytes())?;
+    out.write_all(&1u16.to_le_bytes())?;
+    out.write_all(&2u16.to_le_bytes())?;
+    out.write_all(&rate.to_le_bytes())?;
+    out.write_all(&(rate * 4).to_le_bytes())?;
+    out.write_all(&4u16.to_le_bytes())?;
+    out.write_all(&16u16.to_le_bytes())?;
+    out.write_all(b"data")?;
+    out.write_all(&data_bytes.to_le_bytes())?;
+    for &s in audio {
+        let i = (s.clamp(-1.0, 1.0) * 32767.0) as i16;
+        out.write_all(&i.to_le_bytes())?;
+    }
+    Ok(())
+}
+
+fn write_i24_wav<W: std::io::Write>(out: &mut W, rate: u32, audio: &[f32]) -> std::io::Result<()> {
+    let n = audio.len() as u32;
+    let data_bytes = n * 3;
+    out.write_all(b"RIFF")?;
+    out.write_all(&(36u32 + data_bytes).to_le_bytes())?;
+    out.write_all(b"WAVE")?;
+    out.write_all(b"fmt ")?;
+    out.write_all(&16u32.to_le_bytes())?;
+    out.write_all(&1u16.to_le_bytes())?;
+    out.write_all(&2u16.to_le_bytes())?;
+    out.write_all(&rate.to_le_bytes())?;
+    out.write_all(&(rate * 6).to_le_bytes())?;
+    out.write_all(&6u16.to_le_bytes())?;
+    out.write_all(&24u16.to_le_bytes())?;
+    out.write_all(b"data")?;
+    out.write_all(&data_bytes.to_le_bytes())?;
+    for &s in audio {
+        let v = (s.clamp(-1.0, 1.0) * 8_388_607.0) as i32;
+        out.write_all(&[(v & 0xFF) as u8, ((v >> 8) & 0xFF) as u8, ((v >> 16) & 0xFF) as u8])?;
+    }
+    Ok(())
+}
+

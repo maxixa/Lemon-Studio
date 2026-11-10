@@ -703,6 +703,7 @@ pub extern "system" fn Java_com_maxixa_lemon_LemonEngineBridge_engineExportWav<'
     fd: jint,
     song_mode: jboolean,
     rate: jint,
+    bits: jint,
 ) -> jlong {
     unowned_env
         .with_env(|_env| -> jni::errors::Result<jlong> {
@@ -717,7 +718,7 @@ pub extern "system" fn Java_com_maxixa_lemon_LemonEngineBridge_engineExportWav<'
                     return Ok(0);
                 }
             };
-            match crate::export::render_wav_to_fd(&project_arc, fd, song_mode, rate as u32) {
+            match crate::export::render_wav_to_fd(&project_arc, fd, song_mode, rate as u32, bits as u32) {
                 Ok(stats) => {
                     log::info!("exportWav OK: {} frames, {:.2}s", stats.frames, stats.seconds);
                     Ok(stats.frames as jlong)
