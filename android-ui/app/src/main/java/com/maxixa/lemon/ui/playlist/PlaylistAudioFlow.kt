@@ -66,7 +66,10 @@ fun rememberAudioClipFlow(
             Log.i(TAG, "audio clip placed: ch=$idx len=$length track=$track pos=$position")
         }
     }
-    return { launcher.launch(arrayOf("audio/*")) }
+    return {
+        Log.d(TAG, "audio clip: launching picker (audio/* + */*)")
+        launcher.launch(arrayOf("audio/*", "*/*"))
+    }
 }
 
 private fun copyToAppStorage(ctx: Context, uri: Uri): String? {
