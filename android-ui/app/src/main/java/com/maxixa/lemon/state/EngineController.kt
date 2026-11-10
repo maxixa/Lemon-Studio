@@ -330,9 +330,9 @@ class EngineController {
         try { LemonEngineBridge.engineClearMasterPeak(handle) } catch (_: Throwable) { }
     }
 
-    fun renderStemFd(track: Int, fd: Int, songMode: Boolean, rate: Int): Long {
+    fun renderStemFd(track: Int, fd: Int, songMode: Boolean, rate: Int, bits: Int = 32): Long {
         if (handle == 0L) return 0L
-        return try { LemonEngineBridge.engineRenderStem(handle, track, fd, songMode, rate) }
+        return try { LemonEngineBridge.engineRenderStem(handle, track, fd, songMode, rate, bits) }
             catch (t: Throwable) { Log.e(tag, "renderStemFd threw", t); 0L }
     }
 

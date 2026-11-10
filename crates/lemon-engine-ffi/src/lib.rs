@@ -2088,11 +2088,12 @@ pub extern "system" fn Java_com_maxixa_lemon_LemonEngineBridge_engineRenderStem<
     mut unowned_env: EnvUnowned<'caller>,
     _class: JClass<'caller>,
     handle: jlong, track: jint, fd: jint, song_mode: jboolean, rate: jint,
+    bits: jint,
 ) -> jlong {
     unowned_env.with_env(|_env| -> jni::errors::Result<jlong> {
         if handle == 0 || track <= 0 || fd < 0 || rate <= 0 { return Ok(0); }
         let engine = unsafe { &*(handle as *const EngineHandle) };
-        match engine.render_stem_fd(track as u16, fd, song_mode, rate as u32) {
+        match engine.render_stem_fd(track as u16, fd, song_mode, rate as u32, bits as u32) {
             Ok(n) => Ok(n as jlong),
             Err(e) => { log::error!("renderStem failed: {e}"); Ok(0) }
         }

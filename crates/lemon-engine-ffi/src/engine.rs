@@ -2518,6 +2518,7 @@ impl EngineHandle {
         fd: i32,
         song_mode: bool,
         rate: u32,
+        bits: u32,
     ) -> Result<u64, String> {
         if track == 0 {
             return Err("master (track 0) cannot be a stem".into());
@@ -2531,7 +2532,7 @@ impl EngineHandle {
             if i == 0 || i == track as usize { continue; }
             t.volume = Some(0.0);
         }
-        let stats = crate::export::render_wav_to_fd(&stem, fd, song_mode, rate, 32)?;
+        let stats = crate::export::render_wav_to_fd(&stem, fd, song_mode, rate, bits)?;
         log::info!(
             "stem render OK: track={track} {} frames ({:.2}s)",
             stats.frames, stats.seconds

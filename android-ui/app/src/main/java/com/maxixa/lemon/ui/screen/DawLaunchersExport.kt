@@ -103,7 +103,7 @@ internal fun rememberExportLaunchers(
                     val childUri = createFile(fileName) ?: continue
                     ctx.contentResolver.openFileDescriptor(childUri, "w")?.use { pfd ->
                         val bytes = withContext(Dispatchers.IO) {
-                            engine.renderStemFd(i, pfd.fd, pend.songMode, pend.rate)
+                            engine.renderStemFd(i, pfd.fd, pend.songMode, pend.rate, pend.wavBits)
                         }
                         if (bytes > 0) written++
                     }

@@ -124,7 +124,7 @@ object LemonEngineBridge {
     external fun engineMixerSwapEffects(handle: Long, track: Int, a: Int, b: Int): Boolean
     external fun engineTakeMasterPeak(handle: Long): Float
     external fun engineClearMasterPeak(handle: Long)
-    external fun engineRenderStem(handle: Long, track: Int, fd: Int, songMode: Boolean, rate: Int): Long
+    external fun engineRenderStem(handle: Long, track: Int, fd: Int, songMode: Boolean, rate: Int, bits: Int): Long
     external fun engineChannelPitch(handle: Long, channel: Int): Int
     external fun engineSetChannelPitch(handle: Long, channel: Int, cents: Int): Boolean
     external fun engineChannelLoopStart(handle: Long, channel: Int): Long
