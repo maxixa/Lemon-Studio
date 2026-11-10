@@ -2032,6 +2032,7 @@ dependencies = [
  "os-flp",
  "os-host",
  "os-model",
+ "vorbis_rs",
 ]
 
 [[package]]

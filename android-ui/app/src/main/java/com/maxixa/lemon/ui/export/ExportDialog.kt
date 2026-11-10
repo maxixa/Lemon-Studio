@@ -121,6 +121,7 @@ fun ExportDialog(
                     when (format) {
                         ExportFormat.Wav  -> "32-bit float stereo WAV"
                         ExportFormat.Flac -> "24-bit FLAC (lossless, ~50% smaller)"
+ExportFormat.Ogg  -> "Vorbis OGG (lossy, smaller than FLAC)"
                         ExportFormat.Mp3  -> "192 kbps MP3 (lossy, smallest)"
                         ExportFormat.Midi -> "Standard MIDI (.mid) — notes only"
                     },

@@ -909,6 +909,35 @@ pub extern "system" fn Java_com_maxixa_lemon_LemonEngineBridge_engineExportFlac<
 }
 
 #[unsafe(no_mangle)]
+pub extern "system" fn Java_com_maxixa_lemon_LemonEngineBridge_engineExportOgg<'caller>(
+    mut unowned_env: EnvUnowned<'caller>,
+    _class: JClass<'caller>,
+    handle: jlong,
+    fd: jint,
+    song_mode: jboolean,
+    rate: jint,
+) -> jlong {
+    unowned_env
+        .with_env(|_env| -> jni::errors::Result<jlong> {
+            if handle == 0 || fd < 0 || rate <= 0 { return Ok(0); }
+            let engine = unsafe { &*(handle as *const EngineHandle) };
+            let project_arc = match engine.project.as_ref() {
+                Some(p) => p.clone(),
+                None => return Ok(0),
+            };
+            match crate::export::render_ogg_to_fd(&project_arc, fd, song_mode, rate as u32) {
+                Ok(stats) => {
+                    log::info!("exportOgg -> {} frames", stats.frames);
+                    Ok(stats.frames as jlong)
+                }
+                Err(e) => { log::error!("exportOgg failed: {e}"); Ok(0) }
+            }
+        })
+        .resolve::<ThrowRuntimeExAndDefault>()
+}
+
+
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_com_maxixa_lemon_LemonEngineBridge_engineSetMetronome<'caller>(
     mut unowned_env: EnvUnowned<'caller>,
     _class: JClass<'caller>,

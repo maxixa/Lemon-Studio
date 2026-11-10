@@ -11,6 +11,7 @@ import kotlinx.coroutines.withContext
 enum class ExportFormat(val label: String, val mime: String, val ext: String) {
     Wav("WAV", "audio/wav", "wav"),
     Flac("FLAC", "audio/flac", "flac"),
+    Ogg("OGG", "audio/ogg", "ogg"),
     Mp3("MP3", "audio/mpeg", "mp3"),
     Midi("MIDI", "audio/midi", "mid"),
 }
@@ -32,6 +33,7 @@ class ExportController(private val handle: Long) {
                 val bytes = when (format) {
                     ExportFormat.Wav  -> LemonEngineBridge.engineExportWav(handle, fd, songMode, rate, bits) * 4L
                     ExportFormat.Flac -> LemonEngineBridge.engineExportFlac(handle, fd, songMode, rate) * 6L
+                    ExportFormat.Ogg  -> LemonEngineBridge.engineExportOgg(handle, fd, songMode, rate) * 4L
                     ExportFormat.Mp3  -> LemonEngineBridge.engineExportMp3(handle, fd, songMode, rate, 192)
                     ExportFormat.Midi -> LemonEngineBridge.engineExportMidi(handle, fd, songMode)
                 }

@@ -138,6 +138,60 @@ pub fn render_flac_to_fd(
     Ok(stats)
 }
 
+// ─── OGG Vorbis ────────────────────────────────────────────────
+pub fn render_ogg_to_fd(
+    project: &Project,
+    fd: i32,
+    song_mode: bool,
+    rate: u32,
+) -> Result<Stats, String> {
+    use std::num::{NonZeroU32, NonZeroU8};
+    if rate == 0 { return Err("rate must be > 0".into()); }
+    let dup = dup_fd(fd)?;
+    let mut out = BufWriter::new(dup);
+
+    log::info!("render OGG: rate={rate} song_mode={song_mode}");
+    let (audio, stats) = render_audio(project, song_mode, rate);
+
+    let frames = audio.len() / 2;
+    let mut left  = Vec::with_capacity(frames);
+    let mut right = Vec::with_capacity(frames);
+    for i in 0..frames {
+        left.push(audio[i * 2]);
+        right.push(audio[i * 2 + 1]);
+    }
+
+    let sample_rate = NonZeroU32::new(rate).ok_or("rate must be > 0")?;
+    let channels = NonZeroU8::new(2u8).unwrap();
+
+    {
+        let mut encoder = vorbis_rs::VorbisEncoderBuilder::new(sample_rate, channels, &mut out)
+            .map_err(|e| format!("ogg encoder init: {e}"))?
+            .build()
+            .map_err(|e| format!("ogg encoder build: {e}"))?;
+
+        let block = 4096usize;
+        let mut i = 0usize;
+        while i < frames {
+            let end = (i + block).min(frames);
+            encoder
+                .encode_audio_block(&[&left[i..end], &right[i..end]])
+                .map_err(|e| format!("ogg encode: {e}"))?;
+            i = end;
+        }
+        encoder.finish().map_err(|e| format!("ogg finish: {e}"))?;
+    }
+
+    out.flush().map_err(|e| format!("ogg flush: {e}"))?;
+
+    log::info!(
+        "OGG done: {} frames ({:.2}s) peak {:.4}",
+        stats.frames, stats.seconds, stats.peak
+    );
+    Ok(stats)
+}
+
+
 // ─── MP3 ────────────────────────────────────────────────────────
 pub fn render_mp3_to_fd(
     project: &Project,

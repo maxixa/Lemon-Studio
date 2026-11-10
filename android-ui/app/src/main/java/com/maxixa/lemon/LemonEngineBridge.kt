@@ -58,6 +58,7 @@ object LemonEngineBridge {
     external fun engineFactory(handle: Long): String
     external fun engineSetFactory(handle: Long, path: String): Boolean
     external fun engineExportFlac(handle: Long, fd: Int, songMode: Boolean, rate: Int): Long
+    external fun engineExportOgg(handle: Long, fd: Int, songMode: Boolean, rate: Int): Long
     external fun engineSetMetronome(handle: Long, on: Boolean): Boolean
     external fun engineMetronomeEnabled(handle: Long): Boolean
     external fun engineMetronomeSound(handle: Long): Int

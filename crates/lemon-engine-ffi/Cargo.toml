@@ -45,6 +45,8 @@ lemon-transient-processor = { path = "../../plugins/lemon-transient-processor", 
 lemon-flanger                = { path = "../../plugins/lemon-flanger",                features = ["linked"] }
 lemon-phaser                 = { path = "../../plugins/lemon-phaser",                 features = ["linked"] }
 lemon-vocoder                = { path = "../../plugins/lemon-vocoder",                features = ["linked"] }
+vorbis_rs = "0.5.6"
+
 [[bin]]
 name = "audiotest"
 path = "src/bin/audiotest.rs"
