@@ -25,6 +25,14 @@ class EngineController {
 
     internal var handle: Long = 0L
 
+    /** Last-loaded project basename (no extension), or "" for unsaved. Drives per-project scoping. */
+    var currentProjectName by mutableStateOf("")
+        private set
+
+    internal fun setProjectName(name: String) {
+        currentProjectName = name.substringAfterLast('/').substringBeforeLast('.')
+    }
+
     var isPlaying by mutableStateOf(false);       internal set
     /** Exposed for PianoRollBridge (JNI handle access). */
 
@@ -88,6 +96,7 @@ class EngineController {
 
     fun loadProject(path: String): Boolean {
         if (handle == 0L) return false
+        setProjectName(path)
         if (isPlaying) stop()
         val ok = try { LemonEngineBridge.engineLoadProject(handle, path) }
             catch (t: Throwable) { Log.e(tag, "loadProject threw", t); false }
@@ -112,6 +121,7 @@ class EngineController {
 
     fun loadDemo(): Boolean {
         if (handle == 0L) return false
+        currentProjectName = "demo"
         if (isPlaying) stop()
         val ok = try { LemonEngineBridge.engineLoadDemo(handle) }
             catch (t: Throwable) { Log.e(tag, "loadDemo threw", t); false }

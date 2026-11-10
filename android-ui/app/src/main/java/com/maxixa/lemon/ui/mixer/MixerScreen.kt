@@ -28,16 +28,16 @@ fun MixerScreen(
     val settings = LocalSettings.current
     var busSet by remember { mutableStateOf(engine.busList().toSet()) }
     androidx.compose.runtime.LaunchedEffect(Unit) {
-        val saved = settings.busTracks
+        val saved = settings.busTracksFor(engine.currentProjectName.ifEmpty { "demo" })
         val current = engine.busList().toSet()
         if (saved.isNotEmpty() && current.isEmpty()) {
             saved.forEach { engine.setBus(it, true) }
             busSet = saved
         } else if (current.isNotEmpty()) {
-            settings.busTracks = current
+            settings.setBusTracksFor(engine.currentProjectName.ifEmpty { "demo" }, current)
         }
     }
-    androidx.compose.runtime.LaunchedEffect(engine.revision) { busSet = engine.busList().toSet(); settings.busTracks = busSet }
+    androidx.compose.runtime.LaunchedEffect(engine.revision) { busSet = engine.busList().toSet(); settings.setBusTracksFor(engine.currentProjectName.ifEmpty { "demo" }, busSet) }
     var tracks by remember { mutableStateOf<List<MixerTrackView>>(emptyList()) }
     var slots by remember { mutableStateOf<Map<Int, List<String>>>(emptyMap()) }
     var bypassed by remember { mutableStateOf<Map<Int, Set<Int>>>(emptyMap()) }
@@ -95,7 +95,7 @@ fun MixerScreen(
                         val now = !(idx in busSet)
                         engine.setBus(idx, now)
                         busSet = if (now) busSet + idx else busSet - idx
-                        settings.busTracks = busSet
+                        settings.setBusTracksFor(engine.currentProjectName.ifEmpty { "demo" }, busSet)
                     },)
                 Spacer(Modifier.width(4.dp))
             }

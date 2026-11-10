@@ -64,6 +64,18 @@ class SettingsStore(ctx: Context) {
                 .putStringSet("bus_tracks", v.map { it.toString() }.toSet())
                 .apply()
         }
+
+    fun busTracksFor(scope: String): Set<Int> =
+        prefs.getStringSet("bus_tracks:$scope", emptySet())
+            ?.mapNotNull { it.toIntOrNull() }
+            ?.toSet()
+            ?: emptySet()
+
+    fun setBusTracksFor(scope: String, v: Set<Int>) {
+        prefs.edit()
+            .putStringSet("bus_tracks:$scope", v.map { it.toString() }.toSet())
+            .apply()
+    }
 }
 
 /** Provided in MainActivity; read from any composable that needs settings. */
