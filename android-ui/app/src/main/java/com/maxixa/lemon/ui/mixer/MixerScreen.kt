@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.maxixa.lemon.state.EngineController
+import com.maxixa.lemon.state.LocalSettings
 import com.maxixa.lemon.ui.icon.BackIcon
 import com.maxixa.lemon.ui.settings.EffectParamDialog
 import com.maxixa.lemon.ui.settings.EffectPickerDialog
@@ -24,8 +25,19 @@ fun MixerScreen(
     engine: EngineController,
     onBack: () -> Unit,
 ) {
+    val settings = LocalSettings.current
     var busSet by remember { mutableStateOf(engine.busList().toSet()) }
-    androidx.compose.runtime.LaunchedEffect(engine.revision) { busSet = engine.busList().toSet() }
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        val saved = settings.busTracks
+        val current = engine.busList().toSet()
+        if (saved.isNotEmpty() && current.isEmpty()) {
+            saved.forEach { engine.setBus(it, true) }
+            busSet = saved
+        } else if (current.isNotEmpty()) {
+            settings.busTracks = current
+        }
+    }
+    androidx.compose.runtime.LaunchedEffect(engine.revision) { busSet = engine.busList().toSet(); settings.busTracks = busSet }
     var tracks by remember { mutableStateOf<List<MixerTrackView>>(emptyList()) }
     var slots by remember { mutableStateOf<Map<Int, List<String>>>(emptyMap()) }
     var bypassed by remember { mutableStateOf<Map<Int, Set<Int>>>(emptyMap()) }
@@ -83,6 +95,7 @@ fun MixerScreen(
                         val now = !(idx in busSet)
                         engine.setBus(idx, now)
                         busSet = if (now) busSet + idx else busSet - idx
+                        settings.busTracks = busSet
                     },)
                 Spacer(Modifier.width(4.dp))
             }

@@ -52,6 +52,18 @@ class SettingsStore(ctx: Context) {
             _showGhosts.value = v
             prefs.edit().putBoolean("show_ghosts", v).apply()
         }
+
+    /** Set of mixer tracks tagged as buses. Persisted as string set (prefs key `bus_tracks`). */
+    var busTracks: Set<Int>
+        get() = prefs.getStringSet("bus_tracks", emptySet())
+            ?.mapNotNull { it.toIntOrNull() }
+            ?.toSet()
+            ?: emptySet()
+        set(v) {
+            prefs.edit()
+                .putStringSet("bus_tracks", v.map { it.toString() }.toSet())
+                .apply()
+        }
 }
 
 /** Provided in MainActivity; read from any composable that needs settings. */
