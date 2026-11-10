@@ -25,6 +25,7 @@ fun MixerScreen(
     onBack: () -> Unit,
 ) {
     var busSet by remember { mutableStateOf(engine.busList().toSet()) }
+    androidx.compose.runtime.LaunchedEffect(engine.revision) { busSet = engine.busList().toSet() }
     var tracks by remember { mutableStateOf<List<MixerTrackView>>(emptyList()) }
     var slots by remember { mutableStateOf<Map<Int, List<String>>>(emptyMap()) }
     var bypassed by remember { mutableStateOf<Map<Int, Set<Int>>>(emptyMap()) }

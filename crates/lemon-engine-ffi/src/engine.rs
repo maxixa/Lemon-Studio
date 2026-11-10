@@ -65,7 +65,8 @@ pub struct Snapshot {
     /// Pattern number current at capture time. Restored after `patterns`
     /// so undoing add_pattern returns to the previous current pattern.
     pub current_pattern: Option<u16>,
-}
+
+    pub bus_tracks: HashSet<u16>,}
 
 pub struct EngineHandle {
     pub engine: Option<Arc<Mutex<Engine>>>,
@@ -97,6 +98,7 @@ impl EngineHandle {
     }
 
     pub fn set_bus(&mut self, track: u16, is_bus: bool) -> bool {
+        self.push_snapshot();
         if is_bus { self.bus_tracks.insert(track) } else { self.bus_tracks.remove(&track) }
     }
 
@@ -890,7 +892,8 @@ impl EngineHandle {
             automations: self.project.as_ref().map(|p| p.automations.clone()),
             patterns: self.project.as_ref().map(|p| p.patterns.clone()),
             current_pattern: self.project.as_ref().and_then(|p| p.current_pattern),
-        });
+        
+            bus_tracks: self.bus_tracks.clone(),});
         self.redo_stack.clear();
         if self.undo_stack.len() > Self::UNDO_LIMIT {
             self.undo_stack.remove(0);
@@ -922,7 +925,8 @@ impl EngineHandle {
             automations: self.project.as_ref().map(|p| p.automations.clone()),
             patterns: self.project.as_ref().map(|p| p.patterns.clone()),
             current_pattern: self.project.as_ref().and_then(|p| p.current_pattern),
-        };
+        
+            bus_tracks: self.bus_tracks.clone(),};
         self.redo_stack.push(current);
         self.restore_snapshot(snap)?;
         Ok(true)
@@ -950,7 +954,8 @@ impl EngineHandle {
             automations: self.project.as_ref().map(|p| p.automations.clone()),
             patterns: self.project.as_ref().map(|p| p.patterns.clone()),
             current_pattern: self.project.as_ref().and_then(|p| p.current_pattern),
-        };
+        
+            bus_tracks: self.bus_tracks.clone(),};
         self.undo_stack.push(current);
         self.restore_snapshot(snap)?;
         Ok(true)
@@ -1090,6 +1095,7 @@ impl EngineHandle {
         self.channel_peaks.clear();
         self.populate_channel_peaks();
         log::info!("undo/redo: restored snapshot");
+self.bus_tracks = snap.bus_tracks.clone();
         Ok(())
     }
 
