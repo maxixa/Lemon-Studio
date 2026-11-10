@@ -21,35 +21,60 @@ data class EffectParamMeta(
 
 
 class EngineController {
-    private val tag = "Lemon"
-    private var handle: Long = 0L
+    internal val tag = "Lemon"
 
-    var isPlaying by mutableStateOf(false);       private set
+    internal var handle: Long = 0L
+
+    var isPlaying by mutableStateOf(false);       internal set
     /** Exposed for PianoRollBridge (JNI handle access). */
+
     val handleRef: Long get() = handle
-    var isRecording by mutableStateOf(false);     private set
-    var isLooping by mutableStateOf(false);       private set
-    var metronomeOn by mutableStateOf(false); private set
-    var canUndo by mutableStateOf(false); private set
-    var canRedo by mutableStateOf(false); private set
-    var revision by mutableStateOf(0L); private set
-    var metronomeSound by mutableStateOf(1); private set
-    var metronomeVolumeDb by mutableStateOf(0); private set
-    var countInBars by mutableStateOf(0); private set
-    var currentPattern by mutableStateOf(1); private set
-    var loopRangeStart by mutableStateOf(-1L); private set
-    var loopRangeEnd by mutableStateOf(-1L); private set
-    var projectLoaded by mutableStateOf(false);   private set
-    var positionFrames by mutableStateOf(0L);     private set
-    var sampleRate by mutableStateOf(48_000);     private set
-    var tracks by mutableStateOf<List<String>>(emptyList()); private set
-    var trackPeaks by mutableStateOf<List<FloatArray>>(emptyList()); private set
-    var trackColors by mutableStateOf<List<Int>>(emptyList()); private set
-    var masterPeak by mutableStateOf(0f); private set
-    var bpm by mutableStateOf(130f); private set
-    var timeSigNum by mutableStateOf(4); private set
-    var timeSigDen by mutableStateOf(4); private set
-    var currentArrangement by mutableStateOf(-1); private set
+
+    var isRecording by mutableStateOf(false);     internal set
+
+    var isLooping by mutableStateOf(false);       internal set
+
+    var metronomeOn by mutableStateOf(false); internal set
+
+    var canUndo by mutableStateOf(false); internal set
+
+    var canRedo by mutableStateOf(false); internal set
+
+    var revision by mutableStateOf(0L); internal set
+
+    var metronomeSound by mutableStateOf(1); internal set
+
+    var metronomeVolumeDb by mutableStateOf(0); internal set
+
+    var countInBars by mutableStateOf(0); internal set
+
+    var currentPattern by mutableStateOf(1); internal set
+
+    var loopRangeStart by mutableStateOf(-1L); internal set
+
+    var loopRangeEnd by mutableStateOf(-1L); internal set
+
+    var projectLoaded by mutableStateOf(false);   internal set
+
+    var positionFrames by mutableStateOf(0L);     internal set
+
+    var sampleRate by mutableStateOf(48_000);     internal set
+
+    var tracks by mutableStateOf<List<String>>(emptyList()); internal set
+
+    var trackPeaks by mutableStateOf<List<FloatArray>>(emptyList()); internal set
+
+    var trackColors by mutableStateOf<List<Int>>(emptyList()); internal set
+
+    var masterPeak by mutableStateOf(0f); internal set
+
+    var bpm by mutableStateOf(130f); internal set
+
+    var timeSigNum by mutableStateOf(4); internal set
+
+    var timeSigDen by mutableStateOf(4); internal set
+
+    var currentArrangement by mutableStateOf(-1); internal set
 
     init {
         handle = try {
@@ -60,6 +85,7 @@ class EngineController {
     }
 
     /** Load a project from a filesystem path (e.g. /sdcard/.../test.flp). */
+
     fun loadProject(path: String): Boolean {
         if (handle == 0L) return false
         if (isPlaying) stop()
@@ -72,6 +98,7 @@ class EngineController {
     }
 
     /** Load a project from an open file descriptor (SAF picker). */
+
     fun loadProjectFd(fd: Int): Boolean {
         if (handle == 0L) return false
         if (isPlaying) stop()
@@ -111,12 +138,6 @@ class EngineController {
         Log.i(tag, "loaded: sampleRate=$sampleRate tracks=${tracks.size}")
     }
 
-    fun tickPosition() {
-        if (handle == 0L) return
-        positionFrames = try { LemonEngineBridge.enginePosition(handle) }
-            catch (_: Throwable) { 0L }
-    }
-
     fun setFactory(path: String): Boolean {
         if (handle == 0L) return false
         val ok = try { LemonEngineBridge.engineSetFactory(handle, path) }
@@ -128,15 +149,6 @@ class EngineController {
     fun factory(): String = try {
         if (handle == 0L) "" else LemonEngineBridge.engineFactory(handle)
     } catch (t: Throwable) { Log.e(tag, "factory threw", t); "" }
-
-    fun setTempo(v: Float): Boolean {
-        if (handle == 0L) return false
-        val ok = try { LemonEngineBridge.engineSetTempo(handle, v.toDouble()) }
-            catch (t: Throwable) { Log.e(tag, "setTempo threw", t); false }
-        if (ok) bpm = v
-        Log.i(tag, "setTempo($v) -> $ok")
-        return ok
-    }
 
     fun setTimeSignature(num: Int, den: Int): Boolean {
         if (handle == 0L) return false
@@ -232,15 +244,6 @@ class EngineController {
         } catch (_: Throwable) {}
     }
 
-    fun setMetronome(on: Boolean): Boolean {
-        if (handle == 0L) return false
-        val ok = try { LemonEngineBridge.engineSetMetronome(handle, on) }
-            catch (t: Throwable) { Log.e(tag, "setMetronome threw", t); false }
-        if (ok) metronomeOn = on
-        return ok
-    }
-
-    /** Default PPQ used for bar math in dialogs (96 as the engine's demo). */
     fun previewPpq(): Int = 96
 
     fun deleteChannel(ch: Int): Boolean {
@@ -250,12 +253,6 @@ class EngineController {
         if (ok) refreshAfterLoad()
         Log.i(tag, "deleteChannel($ch) -> $ok")
         return ok
-    }
-
-    fun channelSample(ch: Int): String {
-        if (handle == 0L) return ""
-        return try { LemonEngineBridge.engineChannelSample(handle, ch) }
-            catch (t: Throwable) { Log.e(tag, "channelSample threw", t); "" }
     }
 
     fun setChannelSample(ch: Int, path: String): Boolean {
@@ -296,75 +293,6 @@ class EngineController {
         return ok
     }
 
-    fun channelInstrument(ch: Int): String {
-        if (handle == 0L) return ""
-        return try { LemonEngineBridge.engineChannelInstrument(handle, ch) }
-            catch (t: Throwable) { Log.e(tag, "channelInstrument threw", t); "" }
-    }
-
-    fun instrumentCatalog(): List<Pair<String, String>> {
-        return try {
-            LemonEngineBridge.engineInstrumentCatalog().split('\n')
-                .mapNotNull { line ->
-                    val parts = line.split('\t', limit = 2)
-                    if (parts.size == 2) parts[0] to parts[1] else null
-                }
-        } catch (t: Throwable) { Log.e(tag, "catalog threw", t); emptyList() }
-    }
-
-    fun mixerAddEffect(track: Int, slot: Int, name: String): Boolean {
-        if (handle == 0L) return false
-        val ok = try { LemonEngineBridge.engineMixerAddEffect(handle, track, slot, name) }
-            catch (t: Throwable) { Log.e(tag, "mixerAddEffect threw", t); false }
-        Log.i(tag, "mixerAddEffect(t=$track, s=$slot, $name) -> $ok")
-        return ok
-    }
-
-    fun mixerRemoveEffect(track: Int, slot: Int): Boolean {
-        if (handle == 0L) return false
-        return try { LemonEngineBridge.engineMixerRemoveEffect(handle, track, slot) }
-            catch (t: Throwable) { Log.e(tag, "mixerRemoveEffect threw", t); false }
-    }
-
-    fun mixerSlotEffect(track: Int, slot: Int): String {
-        if (handle == 0L) return ""
-        return try { LemonEngineBridge.engineMixerSlotEffect(handle, track, slot) }
-            catch (t: Throwable) { Log.e(tag, "mixerSlotEffect threw", t); "" }
-    }
-
-    fun mixerGetSends(track: Int): Map<Int, Float> {
-        if (handle == 0L) return emptyMap()
-        val bytes = try { LemonEngineBridge.engineMixerGetSendsBytes(handle, track) }
-            catch (t: Throwable) { Log.e(tag, "mixerGetSends threw", t); ByteArray(0) }
-        if (bytes.size < 10) return emptyMap()
-        val buf = java.nio.ByteBuffer.wrap(bytes).order(java.nio.ByteOrder.LITTLE_ENDIAN)
-        val out = mutableMapOf<Int, Float>()
-        while (buf.remaining() >= 10) {
-            val dest = buf.short.toInt() and 0xFFFF
-            val lv = buf.double.toFloat()
-            out[dest] = lv
-        }
-        return out
-    }
-
-    fun mixerSetSendLevel(track: Int, dest: Int, level: Double): Boolean {
-        if (handle == 0L) return false
-        val ok = try { LemonEngineBridge.engineMixerSetSendLevel(handle, track, dest, level) }
-            catch (t: Throwable) { Log.e(tag, "mixerSetSendLevel threw", t); false }
-        Log.i(tag, "mixerSetSendLevel($track -> $dest, $level) -> $ok")
-        return ok
-    }
-
-    fun effectCatalog(): List<Pair<String, String>> {
-        return try {
-            LemonEngineBridge.engineEffectCatalog().split('\n')
-                .mapNotNull { line ->
-                    val parts = line.split('\t', limit = 2)
-                    if (parts.size == 2) parts[0] to parts[1] else null
-                }
-        } catch (t: Throwable) { Log.e(tag, "effectCatalog threw", t); emptyList() }
-    }
-
     fun setChannelColor(ch: Int, r: Int, g: Int, b: Int): Boolean {
         if (handle == 0L) return false
         val ok = try { LemonEngineBridge.engineSetChannelColor(handle, ch, r, g, b) }
@@ -385,76 +313,10 @@ class EngineController {
         } catch (t: Throwable) { Log.e(tag, "refreshTrackColors threw", t) }
     }
 
-    fun mixerBypassEffect(track: Int, slot: Int, on: Boolean): Boolean {
-        if (handle == 0L) return false
-        return try { LemonEngineBridge.engineMixerBypassEffect(handle, track, slot, on) }
-            catch (t: Throwable) { Log.e(tag, "mixerBypassEffect threw", t); false }
-    }
-
-    fun mixerIsEffectBypassed(track: Int, slot: Int): Boolean {
-        if (handle == 0L) return false
-        return try { LemonEngineBridge.engineMixerEffectBypassed(handle, track, slot) }
-            catch (_: Throwable) { false }
-    }
-
-    fun effectParamCount(track: Int, slot: Int): Int {
-        if (handle == 0L) return 0
-        return try { LemonEngineBridge.engineEffectParamCount(handle, track, slot) }
-            catch (t: Throwable) { Log.e(tag, "effectParamCount threw", t); 0 }
-    }
-
-    fun effectParamMeta(track: Int, slot: Int, index: Int): EffectParamMeta? {
-        if (handle == 0L) return null
-        return try {
-            val parts = LemonEngineBridge.engineEffectParamMeta(handle, track, slot, index).split('\t')
-            if (parts.size < 8) return null
-            EffectParamMeta(
-                id = parts[0].toIntOrNull() ?: return null,
-                name = parts[1],
-                unit = parts[2],
-                group = parts[3],
-                min = parts[4].toDoubleOrNull() ?: 0.0,
-                max = parts[5].toDoubleOrNull() ?: 1.0,
-                default = parts[6].toDoubleOrNull() ?: 0.0,
-                steps = parts[7].toIntOrNull() ?: 0,
-            )
-        } catch (t: Throwable) { Log.e(tag, "effectParamMeta threw", t); null }
-    }
-
-    fun effectParamValue(track: Int, slot: Int, id: Int): Double {
-        if (handle == 0L) return 0.0
-        return try { LemonEngineBridge.engineEffectParamValue(handle, track, slot, id) }
-            catch (_: Throwable) { 0.0 }
-    }
-
-    fun effectParamText(track: Int, slot: Int, id: Int, value: Double): String {
-        if (handle == 0L) return ""
-        return try { LemonEngineBridge.engineEffectParamText(handle, track, slot, id, value) }
-            catch (_: Throwable) { "" }
-    }
-
-    fun effectSetParam(track: Int, slot: Int, id: Int, value: Double): Boolean {
-        if (handle == 0L) return false
-        return try { LemonEngineBridge.engineEffectSetParam(handle, track, slot, id, value) }
-            catch (t: Throwable) { Log.e(tag, "setParam threw", t); false }
-    }
-
     fun setChannelStartOffset(ch: Int, offset: Double): Boolean {
         if (handle == 0L) return false
         return try { LemonEngineBridge.engineSetChannelStartOffset(handle, ch, offset) }
             catch (t: Throwable) { Log.e(tag, "setStartOffset threw", t); false }
-    }
-
-    fun channelStartOffset(ch: Int): Double {
-        if (handle == 0L) return 0.0
-        return try { LemonEngineBridge.engineChannelStartOffset(handle, ch) }
-            catch (_: Throwable) { 0.0 }
-    }
-
-    fun mixerSwapEffects(track: Int, a: Int, b: Int): Boolean {
-        if (handle == 0L) return false
-        return try { LemonEngineBridge.engineMixerSwapEffects(handle, track, a, b) }
-            catch (t: Throwable) { Log.e(tag, "swapEffects threw", t); false }
     }
 
     fun refreshPeak() {
@@ -474,28 +336,10 @@ class EngineController {
             catch (t: Throwable) { Log.e(tag, "renderStemFd threw", t); 0L }
     }
 
-    fun channelPitch(ch: Int): Int {
-        if (handle == 0L) return 0
-        return try { LemonEngineBridge.engineChannelPitch(handle, ch) }
-            catch (_: Throwable) { 0 }
-    }
-
     fun setChannelPitch(ch: Int, cents: Int): Boolean {
         if (handle == 0L) return false
         return try { LemonEngineBridge.engineSetChannelPitch(handle, ch, cents) }
             catch (t: Throwable) { Log.e(tag, "setPitch threw", t); false }
-    }
-
-    fun channelLoopStart(ch: Int): Long {
-        if (handle == 0L) return -1L
-        return try { LemonEngineBridge.engineChannelLoopStart(handle, ch) }
-            catch (_: Throwable) { -1L }
-    }
-
-    fun channelLoopEnd(ch: Int): Long {
-        if (handle == 0L) return -1L
-        return try { LemonEngineBridge.engineChannelLoopEnd(handle, ch) }
-            catch (_: Throwable) { -1L }
     }
 
     fun setChannelLoopPoints(ch: Int, start: Long, end: Long): Boolean {
@@ -510,60 +354,24 @@ class EngineController {
             catch (t: Throwable) { Log.e(tag, "clearLoop threw", t); false }
     }
 
-    fun channelUseLoop(ch: Int): Boolean {
-        if (handle == 0L) return false
-        return try { LemonEngineBridge.engineChannelUseLoop(handle, ch) }
-            catch (_: Throwable) { false }
-    }
-
     fun setChannelUseLoop(ch: Int, on: Boolean): Boolean {
         if (handle == 0L) return false
         return try { LemonEngineBridge.engineSetChannelUseLoop(handle, ch, on) }
             catch (t: Throwable) { Log.e(tag, "setUseLoop threw", t); false }
     }
 
-    fun channelPeaks(ch: Int): FloatArray {
-        if (handle == 0L) return FloatArray(0)
-        val bytes = try { LemonEngineBridge.engineChannelPeaks(handle, ch) }
-            catch (t: Throwable) { Log.e(tag, "channelPeaks threw", t); ByteArray(0) }
-        if (bytes.size < 4) return FloatArray(0)
-        val buf = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN)
-        val out = FloatArray(bytes.size / 4)
-        for (i in out.indices) out[i] = buf.float
-        return out
-    }
-
-    fun channelSampleFrames(ch: Int): Long {
-        if (handle == 0L) return 0L
-        return try { LemonEngineBridge.engineChannelSampleFrames(handle, ch) }
-            catch (_: Throwable) { 0L }
-    }
-
-    fun channelStretchMode(ch: Int): Int {
-        if (handle == 0L) return 0
-        return try { LemonEngineBridge.engineChannelStretchMode(handle, ch) }
-            catch (_: Throwable) { 0 }
-    }
     fun setChannelStretchMode(ch: Int, mode: Int): Boolean {
         if (handle == 0L) return false
         return try { LemonEngineBridge.engineSetChannelStretchMode(handle, ch, mode) }
             catch (t: Throwable) { Log.e(tag, "setStretchMode threw", t); false }
     }
-    fun channelStretchMultiplier(ch: Int): Double {
-        if (handle == 0L) return 1.0
-        return try { LemonEngineBridge.engineChannelStretchMultiplier(handle, ch) }
-            catch (_: Throwable) { 1.0 }
-    }
+
     fun setChannelStretchMultiplier(ch: Int, mul: Double): Boolean {
         if (handle == 0L) return false
         return try { LemonEngineBridge.engineSetChannelStretchMultiplier(handle, ch, mul) }
             catch (t: Throwable) { Log.e(tag, "setStretchMul threw", t); false }
     }
-    fun channelStretchPitch(ch: Int): Int {
-        if (handle == 0L) return 0
-        return try { LemonEngineBridge.engineChannelStretchPitch(handle, ch) }
-            catch (_: Throwable) { 0 }
-    }
+
     fun setChannelStretchPitch(ch: Int, cents: Int): Boolean {
         if (handle == 0L) return false
         return try { LemonEngineBridge.engineSetChannelStretchPitch(handle, ch, cents) }
@@ -571,8 +379,11 @@ class EngineController {
     }
 
     // SampleFx flag constants (mirror os_model::SampleFx)
+
     val FX_REVERSE = 2
+
     val FX_CLIP = 4
+
     val FX_SWAP = 256
 
     fun setChannelFxFlag(ch: Int, flag: Int, on: Boolean): Boolean {
@@ -580,36 +391,19 @@ class EngineController {
         return try { LemonEngineBridge.engineSetChannelFxFlag(handle, ch, flag, on) }
             catch (t: Throwable) { Log.e(tag, "setFxFlag threw", t); false }
     }
-    fun channelFxFlag(ch: Int, flag: Int): Boolean {
-        if (handle == 0L) return false
-        return try { LemonEngineBridge.engineChannelFxFlag(handle, ch, flag) }
-            catch (_: Throwable) { false }
-    }
+
     fun setChannelFxTrim(ch: Int, start: Double, length: Double): Boolean {
         if (handle == 0L) return false
         return try { LemonEngineBridge.engineSetChannelFxTrim(handle, ch, start, length) }
             catch (t: Throwable) { Log.e(tag, "setFxTrim threw", t); false }
     }
-    fun channelFxTrimStart(ch: Int): Double {
-        if (handle == 0L) return 0.0
-        return try { LemonEngineBridge.engineChannelFxTrimStart(handle, ch) }
-            catch (_: Throwable) { 0.0 }
-    }
-    fun channelFxTrimLength(ch: Int): Double {
-        if (handle == 0L) return 1.0
-        return try { LemonEngineBridge.engineChannelFxTrimLength(handle, ch) }
-            catch (_: Throwable) { 1.0 }
-    }
+
     fun setChannelFxNormalize(ch: Int, on: Boolean): Boolean {
         if (handle == 0L) return false
         return try { LemonEngineBridge.engineSetChannelFxNormalize(handle, ch, on) }
             catch (t: Throwable) { Log.e(tag, "setFxNorm threw", t); false }
     }
-    fun channelFxNormalize(ch: Int): Boolean {
-        if (handle == 0L) return false
-        return try { LemonEngineBridge.engineChannelFxNormalize(handle, ch) }
-            catch (_: Throwable) { false }
-    }
+
     fun clearSampleCache() {
         try { LemonEngineBridge.engineClearSampleCache() } catch (_: Throwable) {}
     }
@@ -639,22 +433,6 @@ class EngineController {
         if (idx >= 0) refreshAfterLoad()
         Log.i(tag, "addAutomationChannel(target=$target) -> $idx")
         return idx
-    }
-
-    fun automationPoints(ch: Int): List<Pair<Double, Double>> {
-        if (handle == 0L) return emptyList()
-        val bytes = try { LemonEngineBridge.engineAutomationPoints(handle, ch) }
-            catch (t: Throwable) { Log.e(tag, "automationPoints threw", t); ByteArray(0) }
-        if (bytes.isEmpty()) return emptyList()
-        val n = bytes.size / 16
-        val buf = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN)
-        val out = ArrayList<Pair<Double, Double>>(n)
-        for (i in 0 until n) {
-            val beat = buf.double
-            val value = buf.double
-            out.add(beat to value)
-        }
-        return out
     }
 
     fun setAutomationPoints(ch: Int, points: List<Pair<Double, Double>>): Boolean {
@@ -756,6 +534,7 @@ class EngineController {
     }
 
     /** Refresh current pattern number from engine (after loads). */
+
     fun refreshPattern() {
         if (handle == 0L) return
         try { currentPattern = LemonEngineBridge.enginePatternCurrent(handle) }
@@ -795,32 +574,6 @@ class EngineController {
 
     fun toggleMetronome() = setMetronome(!metronomeOn)
 
-    fun setMetronomeSound(index: Int): Boolean {
-        if (handle == 0L) return false
-        val ok = try { LemonEngineBridge.engineSetMetronomeSound(handle, index) }
-            catch (t: Throwable) { Log.e(tag, "setMetronomeSound threw", t); false }
-        if (ok) metronomeSound = index
-        return ok
-    }
-
-    fun setMetronomeVolume(db: Int): Boolean {
-        if (handle == 0L) return false
-        val ok = try { LemonEngineBridge.engineSetMetronomeVolume(handle, db) }
-            catch (t: Throwable) { Log.e(tag, "setMetronomeVolume threw", t); false }
-        if (ok) metronomeVolumeDb = db.coerceIn(-24, 12)
-        return ok
-    }
-
-    /** Called once on load to sync with engine state. */
-    fun refreshMetronomeSettings() {
-        if (handle == 0L) return
-        try {
-            metronomeSound = LemonEngineBridge.engineMetronomeSound(handle)
-            metronomeVolumeDb = LemonEngineBridge.engineMetronomeVolume(handle)
-        } catch (t: Throwable) { Log.e(tag, "refreshMetronome threw", t) }
-    }
-
-
     fun addSampleChannel(path: String, positionTicks: Int): Int {
         if (handle == 0L) return -1
         val idx = try { LemonEngineBridge.engineAddSampleChannel(handle, path, positionTicks) }
@@ -830,41 +583,12 @@ class EngineController {
         return idx
     }
 
-    fun togglePlay() {
-        if (handle == 0L) { Log.e(tag, "togglePlay: no handle"); return }
-        if (isPlaying) {
-            LemonEngineBridge.engineStopAudio(handle)
-            isPlaying = false
-        } else {
-            val ok = try { LemonEngineBridge.engineStartAudio(handle) }
-                catch (t: Throwable) { Log.e(tag, "engineStartAudio threw", t); false }
-            isPlaying = ok
-            Log.i(tag, "startAudio -> $ok")
-        }
-    }
-
-    fun stop() {
-        if (handle == 0L) return
-        LemonEngineBridge.engineStopAudio(handle)
-        isPlaying = false
-        isRecording = false
-        positionFrames = 0L
-    }
-
     fun applyLooping(on: Boolean) {
         if (handle == 0L) return
         val ok = try { LemonEngineBridge.engineSetLooping(handle, on) }
             catch (t: Throwable) { Log.e(tag, "setLooping threw", t); false }
         if (ok) isLooping = on
         Log.i(tag, "applyLooping($on) -> $ok")
-    }
-
-    fun toggleRecord() { isRecording = !isRecording }
-
-    fun seek(frames: Long) {
-        if (handle == 0L) return
-        try { LemonEngineBridge.engineSeek(handle, frames) }
-        catch (t: Throwable) { Log.e(tag, "seek threw", t) }
     }
 
     fun rewind() = seek(0L)
@@ -878,4 +602,5 @@ class EngineController {
             handle = 0L
         }
     }
+
 }

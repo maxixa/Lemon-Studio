@@ -19,6 +19,7 @@ import com.maxixa.lemon.state.EngineController
 import com.maxixa.lemon.ui.theme.*
 import kotlin.math.pow
 import kotlin.math.roundToInt
+import com.maxixa.lemon.state.*
 
 private data class StretchMode(val value: Int, val label: String, val hint: String)
 private val STRETCH_MODES = listOf(

@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import com.maxixa.lemon.state.EngineController
+import com.maxixa.lemon.state.*
 
 /**
  * Syncs state used by the trim gesture:

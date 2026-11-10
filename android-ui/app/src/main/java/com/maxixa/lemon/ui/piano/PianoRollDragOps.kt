@@ -6,6 +6,7 @@ import com.maxixa.lemon.data.NoteView
 import com.maxixa.lemon.state.PianoRollState
 import kotlin.math.max
 import kotlin.math.min
+import com.maxixa.lemon.state.*
 
 /**
  * Gesture helpers for the piano roll.

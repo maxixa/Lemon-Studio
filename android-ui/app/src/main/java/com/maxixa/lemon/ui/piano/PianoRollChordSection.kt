@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.sp
 import com.maxixa.lemon.state.PianoRollState
 import com.maxixa.lemon.ui.theme.AccentCyan
 import com.maxixa.lemon.ui.theme.BgDeep
+import com.maxixa.lemon.state.*
 
 /**
  * Renders the floating chord-generator FAB (bottom-right, above the event

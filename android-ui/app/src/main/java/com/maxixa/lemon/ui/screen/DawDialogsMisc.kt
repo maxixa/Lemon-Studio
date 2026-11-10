@@ -13,6 +13,7 @@ import com.maxixa.lemon.ui.settings.RecentProjectsDialog
 import com.maxixa.lemon.ui.settings.SampleEditorDialog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import com.maxixa.lemon.state.*
 
 @Composable
 internal fun DawDialogsMisc(

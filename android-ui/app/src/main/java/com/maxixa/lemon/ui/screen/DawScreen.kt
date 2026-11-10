@@ -21,6 +21,7 @@ import com.maxixa.lemon.state.TickFrames
 import com.maxixa.lemon.ui.theme.SystemBarEffect
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import com.maxixa.lemon.state.*
 
 internal enum class DawView { Tracks, PianoRoll, StepSequencer, Playlist, Mixer }
 

@@ -10,6 +10,7 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.unit.sp
 import com.maxixa.lemon.state.PianoRollState
 import com.maxixa.lemon.ui.theme.BorderSubtle
+import com.maxixa.lemon.state.*
 
 /** Width of the piano key rail on the left edge of the piano roll. */
 internal const val KEY_LEFT_PAD_PX = 40f

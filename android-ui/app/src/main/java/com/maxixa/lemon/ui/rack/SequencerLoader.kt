@@ -3,6 +3,7 @@ package com.maxixa.lemon.ui.rack
 import com.maxixa.lemon.LemonEngineBridge
 import com.maxixa.lemon.data.NoteView
 import com.maxixa.lemon.state.PianoRollBridge
+import com.maxixa.lemon.state.*
 
 /**
  * One-shot load of everything StepSequencerScreen needs to render.

@@ -5,6 +5,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import com.maxixa.lemon.state.*
 
 private val AutomationLineColor = Color(0xFF00E5FF).copy(alpha = 0.9f)
 private val AutomationFillColor = Color(0xFF00E5FF).copy(alpha = 0.18f)

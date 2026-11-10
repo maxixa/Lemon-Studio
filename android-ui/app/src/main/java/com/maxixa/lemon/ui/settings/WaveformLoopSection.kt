@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.maxixa.lemon.state.EngineController
 import com.maxixa.lemon.ui.theme.*
+import com.maxixa.lemon.state.*
 
 private val LoopStartColor = Color(0xFF00E5A0)
 private val LoopEndColor = Color(0xFFFF3B5C)

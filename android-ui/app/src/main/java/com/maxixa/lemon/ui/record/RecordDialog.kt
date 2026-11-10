@@ -21,6 +21,7 @@ import com.maxixa.lemon.state.AudioRecorder
 import com.maxixa.lemon.ui.theme.*
 import kotlinx.coroutines.delay
 import java.io.File
+import com.maxixa.lemon.state.*
 
 @Composable
 fun RecordDialog(

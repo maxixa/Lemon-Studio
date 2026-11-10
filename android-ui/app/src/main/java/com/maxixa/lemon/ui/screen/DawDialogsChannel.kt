@@ -8,6 +8,7 @@ import com.maxixa.lemon.ui.settings.ChannelOptionsDialog
 import com.maxixa.lemon.ui.settings.InstrumentPickerDialog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import com.maxixa.lemon.state.*
 
 @Composable
 internal fun DawDialogsChannel(

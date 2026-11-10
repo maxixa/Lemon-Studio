@@ -19,6 +19,7 @@ import com.maxixa.lemon.state.PianoRollState
 import com.maxixa.lemon.ui.theme.AccentOrange
 import com.maxixa.lemon.ui.theme.BgDeep
 import com.maxixa.lemon.ui.theme.BgRaised
+import com.maxixa.lemon.state.*
 
 /**
  * Renders the floating scale-lock FAB (above chord FAB, bottom-right) and

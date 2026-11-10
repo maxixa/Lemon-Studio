@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.maxixa.lemon.state.EngineController
 import com.maxixa.lemon.ui.theme.*
+import com.maxixa.lemon.state.*
 
 @Composable
 fun SampleFxSection(channelIndex: Int, engine: EngineController) {

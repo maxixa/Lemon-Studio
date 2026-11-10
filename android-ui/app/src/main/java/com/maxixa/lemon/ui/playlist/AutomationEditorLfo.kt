@@ -19,6 +19,7 @@ import com.maxixa.lemon.state.EngineController.AutomationLfo
 import com.maxixa.lemon.ui.theme.*
 import kotlin.math.ln
 import kotlin.math.pow
+import com.maxixa.lemon.state.*
 
 private const val SPEED_DEFAULT = 45819
 private const val SPEED_MIN = 0
