@@ -1,6 +1,7 @@
 package com.maxixa.lemon.ui.playlist
 
 import androidx.compose.runtime.*
+import com.maxixa.lemon.LemonEngineBridge
 import com.maxixa.lemon.state.EngineController
 import com.maxixa.lemon.ui.settings.LoopRangeDialog
 import com.maxixa.lemon.state.EngineController.AutomationLfo
@@ -70,6 +71,19 @@ fun PlaylistDialogHost(
                     state.deleteMarker(selId)
                     state.selectedMarkerId = null
                     commit()
+                },
+
+                onSetLoopRange = {
+                    val pair = state.loopRangeFromMarker(selId)
+                    if (pair != null) {
+                        val start = pair.first.toLong()
+                        val end = pair.second.toLong()
+                        engine.setLoopRange(start, end)
+                        try {
+                            LemonEngineBridge.engineSetLooping(engine.handleRef, true)
+                        } catch (_: Throwable) { }
+                    }
+                    state.selectedMarkerId = null
                 },
                 onDismiss = { state.selectedMarkerId = null },
             )

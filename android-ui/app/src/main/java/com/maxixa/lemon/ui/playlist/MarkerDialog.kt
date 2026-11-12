@@ -28,6 +28,7 @@ fun MarkerDialog(
     ppq: Int,
     onSave: (newName: String, newPositionTicks: Int) -> Unit,
     onDelete: () -> Unit,
+    onSetLoopRange: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     val barTicks = (ppq * 4).coerceAtLeast(1)
@@ -95,7 +96,14 @@ fun MarkerDialog(
                         fontWeight = FontWeight.SemiBold)
                 }
             }
-        },
+        
+            Spacer(Modifier.height(12.dp))
+            TextButton(onClick = { onSetLoopRange() }) {
+                Text("\ud83d\udd01 Loop to next marker",
+                    color = AccentCyan, fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold)
+            }
+},
         confirmButton = {
             TextButton(onClick = { onSave(name.trim(), bar * barTicks) }) {
                 Text("Save", color = AccentOrange, fontSize = 13.sp,

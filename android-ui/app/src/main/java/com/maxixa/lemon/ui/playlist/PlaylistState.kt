@@ -92,6 +92,31 @@ class PlaylistState(private val store: SettingsStore? = null) {
         return markers.size - 1
     }
 
+    /** Returns (start, end) loop ticks: this marker → next marker (or +4 bars if none). */
+
+    fun loopRangeFromMarker(markerId: Long): Pair<Int, Int>? {
+
+        val marker = markers.firstOrNull { it.id == markerId } ?: return null
+
+        val start = marker.position
+
+        val nextPos = markers
+
+            .asSequence()
+
+            .map { it.position }
+
+            .filter { it > start }
+
+            .minOrNull()
+
+        val end = nextPos ?: (start + 4 * barTicks())
+
+        return start to end
+
+    }
+
+
     fun deleteMarker(id: Long): Boolean {
         val before = markers.size
         markers.removeAll { it.id == id }
