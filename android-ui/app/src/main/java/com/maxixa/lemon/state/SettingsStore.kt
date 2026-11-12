@@ -84,6 +84,11 @@ class SettingsStore(ctx: Context) {
             prefs.edit().putInt("record_count_in_bars", v.coerceIn(0, 4)).apply()
         }
 
+    var recordMonitorEnabled: Boolean
+        get() = prefs.getBoolean("record_monitor", false)
+        set(v) { prefs.edit().putBoolean("record_monitor", v).apply() }
+
+
     var exportSongMode: Boolean
         get() = prefs.getBoolean("export_song_mode", true)
         set(v) { prefs.edit().putBoolean("export_song_mode", v).apply() }

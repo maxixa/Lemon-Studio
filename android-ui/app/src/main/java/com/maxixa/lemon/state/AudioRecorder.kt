@@ -20,7 +20,7 @@ class AudioRecorder(private val sampleRate: Int = 44100) {
     private var thread: Thread? = null
     @Volatile private var recording = false
 
-    fun start(outputFile: File): Boolean {
+    fun start(outputFile: File, monitor: AudioMonitor? = null): Boolean {
         if (recording) return false
 
         val minBuf = AudioRecord.getMinBufferSize(
@@ -67,6 +67,7 @@ class AudioRecorder(private val sampleRate: Int = 44100) {
                     val n = rec.read(buf, 0, bufSize)
                     if (n > 0) {
                         raf.write(buf, 0, n)
+                        monitor?.feed(buf, 0, n)
                         totalBytes += n
                     }
                 }

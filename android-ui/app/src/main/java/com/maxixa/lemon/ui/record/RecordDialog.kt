@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.maxixa.lemon.state.AudioRecorder
+import com.maxixa.lemon.state.AudioMonitor
 import com.maxixa.lemon.state.LocalSettings
 import com.maxixa.lemon.ui.theme.*
 import kotlinx.coroutines.Job
@@ -45,6 +46,8 @@ fun RecordDialog(
     var elapsedSec by remember { mutableStateOf(0) }
     var currentFile by remember { mutableStateOf<File?>(null) }
     var recorder by remember { mutableStateOf<AudioRecorder?>(null) }
+    var monitorEnabled by remember { mutableStateOf(settings.recordMonitorEnabled) }
+    var monitor by remember { mutableStateOf<AudioMonitor?>(null) }
     var countInBars by remember { mutableStateOf(settings.countInBars) }
     var countInJob by remember { mutableStateOf<Job?>(null) }
 
@@ -65,12 +68,14 @@ fun RecordDialog(
         val dir = ctx.getExternalFilesDir(null)?.resolve("recordings") ?: return
         dir.mkdirs()
         val f = dir.resolve("rec_${System.currentTimeMillis()}.wav")
+        val m = if (monitorEnabled) AudioMonitor(sampleRate).also { it.start() } else null
         val r = AudioRecorder(sampleRate)
-        if (r.start(f)) {
+        if (r.start(f, m)) {
             recorder = r
+            monitor = m
             currentFile = f
             isRecording = true
-        }
+        } else { m?.stop() }
     }
 
     fun handleRecordTap() {
@@ -81,6 +86,8 @@ fun RecordDialog(
             }
             isRecording -> {
                 recorder?.stop()
+                monitor?.stop()
+                monitor = null
                 isRecording = false
                 currentFile?.let { onComplete(it) }
             }
@@ -144,7 +151,26 @@ fun RecordDialog(
                             )
                         }
                     }
+                    Spacer(Modifier.height(12.dp))
+                    Text("Monitor", color = TextMuted, fontSize = 11.sp)
+                    Spacer(Modifier.height(4.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        ToggleSmall("Off", active = !monitorEnabled) {
+                            monitorEnabled = false
+                            settings.recordMonitorEnabled = false
+                        }
+                        ToggleSmall("On", active = monitorEnabled) {
+                            monitorEnabled = true
+                            settings.recordMonitorEnabled = true
+                        }
+                    }
+                    if (monitorEnabled) {
+                        Spacer(Modifier.height(4.dp))
+                        Text("⚠ Headphones recommended — using speaker will cause feedback",
+                            color = AccentAmber, fontSize = 9.sp)
+                    }
                     Spacer(Modifier.height(16.dp))
+
                 }
 
                 Text(
@@ -203,3 +229,21 @@ fun RecordDialog(
         },
     )
 }
+
+@androidx.compose.runtime.Composable
+private fun ToggleSmall(label: String, active: Boolean, onClick: () -> Unit) {
+    Text(
+        label,
+        color = if (active) BgDeep else TextMuted,
+        fontSize = 11.sp,
+        fontWeight = FontWeight.Bold,
+        modifier = Modifier
+            .background(
+                if (active) AccentCyan else BgRaised,
+                RoundedCornerShape(4.dp),
+            )
+            .clickable(onClick = onClick)
+            .padding(horizontal = 10.dp, vertical = 4.dp),
+    )
+}
+
