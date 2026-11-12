@@ -154,6 +154,8 @@ fun PlaylistScreen(
                 commit()
             },
             loopActive = engine.loopRangeStart >= 0L && engine.loopRangeEnd > engine.loopRangeStart,
+            snapMode = state.snapMode,
+            onSnapCycle = { state.snapMode = (state.snapMode + 1) % 4 },
             arrangementLabel = sync.arrangements.firstOrNull { it.first == engine.currentArrangement }?.second ?: "Arr",
             onArrangementClick = { state.showArrangementPicker = true },
             barsVisible = state.barsVisible,

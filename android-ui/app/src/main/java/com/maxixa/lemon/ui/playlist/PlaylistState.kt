@@ -52,8 +52,25 @@ class PlaylistState(private val store: SettingsStore? = null) {
     fun barBeats(): Int =
         (effectiveBarNum() * 4 / effectiveBarDen()).coerceAtLeast(1)
 
+
+    /** Grid snap mode: 0=off, 1=bar, 2=1/2 bar, 3=1/4 bar. */
+    var snapMode by mutableStateOf(0)
+
+    /** Snap raw ticks to the current grid. Off → unchanged. */
+    fun snapTicks(raw: Int): Int {
+        if (snapMode == 0) return raw
+        val bar = barTicks().coerceAtLeast(1)
+        val step = when (snapMode) {
+            1 -> bar
+            2 -> (bar / 2).coerceAtLeast(1)
+            3 -> (bar / 4).coerceAtLeast(1)
+            else -> return raw
+        }
+        return ((raw + step / 2) / step) * step
+    }
+
     fun addClip(track: Int, position: Int, length: Int, pattern: Int): Int {
-        clips.add(ClipView(nextId++, track, position.coerceAtLeast(0), length, pattern))
+        clips.add(ClipView(nextId++, track, snapTicks(position).coerceAtLeast(0), length, pattern))
         return clips.size - 1
     }
 
@@ -71,7 +88,7 @@ class PlaylistState(private val store: SettingsStore? = null) {
         clips.add(ClipView(
             id = nextId++,
             track = track.coerceIn(0, (trackCount - 1).coerceAtLeast(0)),
-            position = position.coerceAtLeast(0),
+            position = snapTicks(position).coerceAtLeast(0),
             length = length.coerceAtLeast(1),
             pattern = channelIdx,
             sourceKind = 1,

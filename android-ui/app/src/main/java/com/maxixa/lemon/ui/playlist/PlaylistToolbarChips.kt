@@ -30,6 +30,8 @@ internal fun RowScope.PlaylistToolbarChips(
     trimMode: Boolean,
     onToggleMode: () -> Unit,
     onLoopClick: () -> Unit,
+    snapMode: Int,
+    onSnapCycle: () -> Unit,
     onArrangementClick: () -> Unit,
     onBarsVisibleChange: (Float) -> Unit,
     onToggleTrimMode: () -> Unit,
@@ -59,6 +61,33 @@ internal fun RowScope.PlaylistToolbarChips(
             fontSize = 11.sp, fontWeight = FontWeight.Bold,
         )
     }
+
+    // Snap chip
+
+    Box(
+
+        Modifier.height(24.dp).width(32.dp)
+
+            .background(if (snapMode > 0) AccentAmber.copy(alpha = 0.2f) else BgRaised)
+
+            .clickable(onClick = onSnapCycle),
+
+        contentAlignment = Alignment.Center,
+
+    ) {
+
+        Text(
+
+            when (snapMode) { 0 -> "\u00b7"; 1 -> "1b"; 2 -> "\u00bdb"; 3 -> "\u00bcb"; else -> "\u00b7" },
+
+            color = if (snapMode > 0) AccentAmber else TextMuted,
+
+            fontSize = 10.sp, fontWeight = FontWeight.Bold,
+
+        )
+
+    }
+
 
     // Arrangement chip
     Box(
