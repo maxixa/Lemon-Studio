@@ -8,7 +8,7 @@ use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicU32, Ordering};
 
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
-use cpal::{FromSample, SampleFormat, SizedSample, Stream, StreamConfig};
+use cpal::{BufferSize, FromSample, SampleFormat, SizedSample, Stream, StreamConfig};
 use os_engine::Engine;
 
 pub struct AudioDevice {
@@ -35,17 +35,66 @@ impl AudioDevice {
             format
         );
 
-        let stream = match format {
-            SampleFormat::F32 => build::<f32>(&device, config, engine, peak.clone())?,
-            SampleFormat::I16 => build::<i16>(&device, config, engine, peak.clone())?,
-            SampleFormat::I32 => build::<i32>(&device, config, engine, peak.clone())?,
-            SampleFormat::U16 => build::<u16>(&device, config, engine, peak.clone())?,
-            other => return Err(format!("unsupported sample format: {other:?}").into()),
-        };
+        let (stream, chosen_buf) = build_with_fallback(&device, &config, format, engine, peak.clone())?;
 
         stream.play()?;
+
+        // AAudio tuning report — grep logcat for "Lemon: audio: buffer"
+        match chosen_buf {
+            BufferSize::Fixed(n) => {
+                let rate = config.sample_rate as f64;
+                let ms = (n as f64 / rate) * 1000.0;
+                log::info!("audio: buffer {} frames @ {} Hz ≈ {:.2} ms", n, rate, ms);
+            }
+            _ => log::info!(
+                "audio: buffer Default (dynamically tuned) @ {} Hz",
+                config.sample_rate
+            ),
+        }
         Ok(Self { _stream: stream })
     }
+}
+
+/// Try a sequence of buffer sizes, falling back on failure. cpal's AAudio
+/// backend already requests PERFORMANCE_MODE_LOW_LATENCY, but its default
+/// buffer size (Unknown) makes cpal tune dynamically from a large initial
+/// buffer — audible cold-start latency. Requesting Fixed sizes skips that.
+///
+/// Order: 256 frames (≈5.3 ms @ 48 kHz) → 512 (≈10.7 ms) → Default. Every
+/// fallback is byte-identical to today's behavior on the worst device.
+fn build_with_fallback(
+    device: &cpal::Device,
+    base_config: &StreamConfig,
+    format: SampleFormat,
+    engine: Option<Arc<Mutex<Engine>>>,
+    peak: Arc<AtomicU32>,
+) -> Result<(Stream, BufferSize), Box<dyn std::error::Error>> {
+    let candidates = [
+        BufferSize::Fixed(256),
+        BufferSize::Fixed(512),
+        BufferSize::Default,
+    ];
+    for buf in candidates {
+        let mut cfg = base_config.clone();
+        cfg.buffer_size = buf;
+        let result = match format {
+            SampleFormat::F32 => build::<f32>(device, cfg, engine.clone(), peak.clone()),
+            SampleFormat::I16 => build::<i16>(device, cfg, engine.clone(), peak.clone()),
+            SampleFormat::I32 => build::<i32>(device, cfg, engine.clone(), peak.clone()),
+            SampleFormat::U16 => build::<u16>(device, cfg, engine.clone(), peak.clone()),
+            other => return Err(format!("unsupported sample format: {other:?}").into()),
+        };
+        match result {
+            Ok(s) => {
+                log::info!("audio: opened with {:?}", buf);
+                return Ok((s, buf));
+            }
+            Err(e) => {
+                log::warn!("audio: {:?} failed ({e}); trying next candidate", buf);
+            }
+        }
+    }
+    Err("all audio buffer candidates failed".into())
 }
 
 fn build<T>(
