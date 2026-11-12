@@ -25,6 +25,7 @@ fun PlaylistScreen(
     val settings = LocalSettings.current
     val state = remember { PlaylistState(settings) }
     val sync = rememberPlaylistSync(handle, engine, state)
+    var showStretchFor by remember { mutableStateOf<Long?>(null) }
     var clipboard by remember { mutableStateOf<List<ClipView>>(emptyList()) }
 
     var showAdd by remember { mutableStateOf(false) }
@@ -114,6 +115,17 @@ fun PlaylistScreen(
             songMode = state.songMode,
             tool = state.tool,
             hasSelection = state.clips.any { it.selected },
+            onStretch = {
+                val sel = state.clips.filter {
+                    it.selected && it.sourceKind == 1 &&
+                        runCatching { engine.channelSampleFrames(it.pattern) > 0 }.getOrDefault(false)
+                }
+                if (sel.size == 1) showStretchFor = sel[0].id
+            },
+            canStretch = (state.clips.count {
+                it.selected && it.sourceKind == 1 &&
+                    runCatching { engine.channelSampleFrames(it.pattern) > 0 }.getOrDefault(false)
+            }) == 1,
             onCopy = copySelected,
             onCut = cutSelected,
             onPaste = pasteAtPlayhead,
@@ -204,4 +216,18 @@ onAddAutomation = { showAddAutomation = true },
             showAddAutomation = true
         },
     )
+
+    val stretchClip = state.clips.firstOrNull { it.id == showStretchFor }
+    if (stretchClip != null) {
+        PlaylistStretchDialog(
+            engine = engine,
+            clip = stretchClip,
+            sharedCount = state.clips.count {
+                it.sourceKind == 1 && it.pattern == stretchClip.pattern
+            },
+            onApplied = { showStretchFor = null },
+            onDismiss = { showStretchFor = null },
+        )
+    }
+
 }

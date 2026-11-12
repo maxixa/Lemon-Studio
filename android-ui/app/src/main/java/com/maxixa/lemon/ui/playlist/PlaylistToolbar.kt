@@ -34,6 +34,8 @@ fun PlaylistToolbar(
     barsVisible: Float,
     trimMode: Boolean,
     hasSelection: Boolean,
+    onStretch: () -> Unit,
+    canStretch: Boolean,
     onCopy: () -> Unit,
     onCut: () -> Unit,
     onPaste: () -> Unit,
@@ -106,6 +108,10 @@ fun PlaylistToolbar(
         }
         Slot(onPaste) {
             Text("V", color = if (clipboardSize > 0) AccentAmber else TextMuted.copy(alpha = 0.4f),
+                fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        }
+        Slot(onStretch) {
+            Text("\u2194", color = if (canStretch) AccentCyan else TextMuted.copy(alpha = 0.4f),
                 fontSize = 16.sp, fontWeight = FontWeight.Bold)
         }
         Slot(onDuplicate) {
