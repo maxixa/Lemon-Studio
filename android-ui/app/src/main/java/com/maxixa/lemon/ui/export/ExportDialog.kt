@@ -23,11 +23,17 @@ fun ExportDialog(
     onConfirm: (songMode: Boolean, rate: Int, format: ExportFormat, withStems: Boolean, wavBits: Int) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    var songMode by remember { mutableStateOf(true) }
-    var rate by remember { mutableStateOf(48000) }
-    var format by remember { mutableStateOf(ExportFormat.Wav) }
-    var wavBits by remember { mutableStateOf(32) }
-    var withStems by remember { mutableStateOf(false) }
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    val settings = remember { com.maxixa.lemon.state.SettingsStore(ctx.applicationContext) }
+
+    var songMode by remember { mutableStateOf(settings.exportSongMode) }
+    var rate by remember { mutableStateOf(settings.exportRate) }
+    var format by remember { mutableStateOf(
+        try { ExportFormat.valueOf(settings.exportFormatName) }
+        catch (_: Throwable) { ExportFormat.Wav }
+    ) }
+    var wavBits by remember { mutableStateOf(settings.exportWavBits) }
+    var withStems by remember { mutableStateOf(settings.exportWithStems) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -119,7 +125,7 @@ fun ExportDialog(
                 Spacer(Modifier.height(10.dp))
                 Text(
                     when (format) {
-                        ExportFormat.Wav  -> "32-bit float stereo WAV"
+                        ExportFormat.Wav  -> if (wavBits == 32) "32-bit float stereo WAV" else "${wavBits}-bit stereo WAV"
                         ExportFormat.Flac -> "24-bit FLAC (lossless, ~50% smaller)"
 ExportFormat.Ogg  -> "Vorbis OGG (lossy, smaller than FLAC)"
                         ExportFormat.Mp3  -> "192 kbps MP3 (lossy, smallest)"
@@ -127,10 +133,23 @@ ExportFormat.Ogg  -> "Vorbis OGG (lossy, smaller than FLAC)"
                     },
                     color = TextMuted, fontSize = 10.sp,
                 )
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        "≈ " + estimateSizePerMin(rate, format, wavBits)
+                            + if (withStems) " × (1 + tracks)" else "",
+                        color = TextMuted.copy(alpha = 0.7f), fontSize = 9.sp,
+                    )
             }
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(songMode, rate, format, withStems, wavBits) }) {
+            TextButton(onClick = {
+                settings.exportSongMode = songMode
+                settings.exportRate = rate
+                settings.exportFormatName = format.name
+                settings.exportWavBits = wavBits
+                settings.exportWithStems = withStems
+                onConfirm(songMode, rate, format, withStems, wavBits)
+            }) {
                 Text("Export…", color = AccentOrange,
                     fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
             }
@@ -173,3 +192,23 @@ private fun Toggle(
             fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
     }
 }
+
+/**
+ * Approximate size per minute of audio for the given export configuration.
+ * Rounded for UI display — actual file size depends on content (VBR formats)
+ * and stem count. Informative, not exact.
+ */
+private fun estimateSizePerMin(rate: Int, format: ExportFormat, wavBits: Int): String {
+    val mbPerMin: Double = when (format) {
+        ExportFormat.Wav -> {
+            val bytesPerSample = when (wavBits) { 16 -> 2; 24 -> 3; else -> 4 }
+            rate.toLong() * 60L * 2L * bytesPerSample / 1_048_576.0
+        }
+        ExportFormat.Flac -> rate.toLong() * 60L * 2L * 3L / 1_048_576.0 * 0.5
+        ExportFormat.Ogg  -> 1.5
+        ExportFormat.Mp3  -> 1.44
+        ExportFormat.Midi -> 0.002
+    }
+    return if (mbPerMin < 0.01) "<1 KB / min" else "%.1f MB / min".format(mbPerMin)
+}
+

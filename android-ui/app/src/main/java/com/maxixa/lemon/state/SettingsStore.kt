@@ -83,6 +83,26 @@ class SettingsStore(ctx: Context) {
         set(v) {
             prefs.edit().putInt("record_count_in_bars", v.coerceIn(0, 4)).apply()
         }
+
+    var exportSongMode: Boolean
+        get() = prefs.getBoolean("export_song_mode", true)
+        set(v) { prefs.edit().putBoolean("export_song_mode", v).apply() }
+
+    var exportRate: Int
+        get() = prefs.getInt("export_rate", 48000)
+        set(v) { prefs.edit().putInt("export_rate", v).apply() }
+
+    var exportFormatName: String
+        get() = prefs.getString("export_format", "Wav") ?: "Wav"
+        set(v) { prefs.edit().putString("export_format", v).apply() }
+
+    var exportWavBits: Int
+        get() = prefs.getInt("export_wav_bits", 32)
+        set(v) { prefs.edit().putInt("export_wav_bits", v).apply() }
+
+    var exportWithStems: Boolean
+        get() = prefs.getBoolean("export_with_stems", false)
+        set(v) { prefs.edit().putBoolean("export_with_stems", v).apply() }
 }
 
 /** Provided in MainActivity; read from any composable that needs settings. */
