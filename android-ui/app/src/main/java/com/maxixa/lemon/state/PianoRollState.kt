@@ -99,6 +99,14 @@ class PianoRollState(private val store: SettingsStore? = null) {
         return notes.size - 1
     }
 
+    /** Insert a fully-populated NoteView. Reuses add() for id gen. */
+    fun addFull(note: NoteView): Int {
+        val idx = add(note.position, note.length, note.key, note.channel)
+        notes[idx] = note.copy(id = notes[idx].id)
+        return idx
+    }
+
+
     fun findAt(pos: Int, key: Int, tol: Int): Int =
         notes.indexOfFirst {
             it.key == key && pos >= it.position && pos <= it.position + it.length.coerceAtLeast(tol)

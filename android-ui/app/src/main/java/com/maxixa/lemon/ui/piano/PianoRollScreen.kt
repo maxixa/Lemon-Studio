@@ -6,6 +6,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import com.maxixa.lemon.LemonEngineBridge
 import com.maxixa.lemon.state.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.maxixa.lemon.ui.theme.*
 
 /**
  * Piano roll orchestrator — state, effects, dialog visibility.
@@ -38,6 +45,7 @@ fun PianoRollScreen(
     val settings = LocalSettings.current
     val state = remember { PianoRollState(settings) }
     var showZoom by remember { mutableStateOf(false) }
+    var showArpDialog by remember { mutableStateOf(false) }
     var showTransform by remember { mutableStateOf(false) }
     var showGroove by remember { mutableStateOf(false) }
     var showChannelPicker by remember { mutableStateOf(false) }
@@ -144,4 +152,36 @@ fun PianoRollScreen(
             onDismiss = { showQuantize = false },
         )
     }
+
+    if (state.notes.any { it.selected } && !showArpDialog) {
+        Box(Modifier.fillMaxSize()) {
+            Text(
+                "ARP",
+                color = BgDeep,
+                fontSize = 9.sp,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                modifier = Modifier
+                    .align(androidx.compose.ui.Alignment.BottomEnd)
+                    .padding(end = 12.dp, bottom = 204.dp)
+                    .background(AccentAmber, androidx.compose.foundation.shape.RoundedCornerShape(6.dp))
+                    .clickable { showArpDialog = true }
+                    .padding(horizontal = 10.dp, vertical = 6.dp),
+            )
+        }
+    }
+
+    if (showArpDialog) {
+        ArpeggiatorDialog(
+            selected = state.notes.filter { it.selected },
+            ppq = state.ppq,
+            onApply = { notes ->
+                state.notes.removeAll { it.selected }
+                for (n in notes) state.addFull(n)
+                showArpDialog = false
+                commit()
+            },
+            onDismiss = { showArpDialog = false },
+        )
+    }
+
 }
