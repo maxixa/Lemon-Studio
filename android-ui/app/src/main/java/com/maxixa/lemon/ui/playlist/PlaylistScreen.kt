@@ -25,6 +25,7 @@ fun PlaylistScreen(
     val settings = LocalSettings.current
     val state = remember { PlaylistState(settings) }
     val sync = rememberPlaylistSync(handle, engine, state)
+    var clipboard by remember { mutableStateOf<List<ClipView>>(emptyList()) }
 
     var showAdd by remember { mutableStateOf(false) }
     var showAddAutomation by remember { mutableStateOf(false) }
@@ -39,6 +40,51 @@ fun PlaylistScreen(
             state.clips,
             state.markers,
         )
+    }
+
+
+    val copySelected: () -> Unit = {
+
+        val sel = state.clips.filter { it.selected }
+
+        if (sel.isNotEmpty()) {
+
+            clipboard = sel.map { it.copy(id = 0L, selected = false) }
+
+        }
+
+    }
+
+    val pasteAtPlayhead: () -> Unit = {
+
+        if (clipboard.isNotEmpty()) {
+
+            val base = sync.playheadTicks
+
+            val minPos = clipboard.minOf { it.position }
+
+            for (i in state.clips.indices) {
+
+                state.clips[i] = state.clips[i].copy(selected = false)
+
+            }
+
+            for (clip in clipboard) {
+
+                state.addClipRaw(clip.copy(
+
+                    position = (base + (clip.position - minPos)).coerceAtLeast(0),
+
+                    selected = true,
+
+                ))
+
+            }
+
+            commit()
+
+        }
+
     }
     val commitSilent: () -> Unit = {
         PlaylistBridge.commit(
@@ -59,6 +105,9 @@ fun PlaylistScreen(
             songMode = state.songMode,
             tool = state.tool,
             hasSelection = state.clips.any { it.selected },
+            onCopy = copySelected,
+            onPaste = pasteAtPlayhead,
+            clipboardSize = clipboard.size,
             isPlaying = engine.isPlaying,
             onBack = {
                 try { LemonEngineBridge.engineSetPlayMode(handle, false) } catch (_: Throwable) {}

@@ -57,6 +57,13 @@ class PlaylistState(private val store: SettingsStore? = null) {
         return clips.size - 1
     }
 
+    /** Insert a pre-populated clip (copy/paste). Assigns a fresh id. */
+    fun addClipRaw(clip: ClipView): Int {
+        clips.add(clip.copy(id = nextId++))
+        return clips.size - 1
+    }
+
+
     fun deleteSelected() { clips.removeAll { it.selected } }
 
     /** Add a channel-source clip (audio / automation). `channelIdx` is 0-based. */
