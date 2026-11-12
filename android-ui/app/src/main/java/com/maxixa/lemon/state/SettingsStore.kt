@@ -112,6 +112,25 @@ class SettingsStore(ctx: Context) {
     var exportMp3Kbps: Int
         get() = prefs.getInt("export_mp3_kbps", 192)
         set(v) { prefs.edit().putInt("export_mp3_kbps", v.coerceIn(64, 320)).apply() }
+
+    private val BUS_FX_PREFIX = "bus_fx_preset:"
+
+    fun listBusFxPresets(): List<String> =
+        prefs.all.keys
+            .filter { it.startsWith(BUS_FX_PREFIX) }
+            .map { it.removePrefix(BUS_FX_PREFIX) }
+            .sorted()
+
+    fun getBusFxPreset(name: String): String? =
+        prefs.getString("$BUS_FX_PREFIX$name", null)
+
+    fun setBusFxPreset(name: String, encoded: String) {
+        prefs.edit().putString("$BUS_FX_PREFIX$name", encoded).apply()
+    }
+
+    fun deleteBusFxPreset(name: String) {
+        prefs.edit().remove("$BUS_FX_PREFIX$name").apply()
+    }
 }
 
 /** Provided in MainActivity; read from any composable that needs settings. */

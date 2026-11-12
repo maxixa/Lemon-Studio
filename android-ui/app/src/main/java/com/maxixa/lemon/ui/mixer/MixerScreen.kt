@@ -27,6 +27,8 @@ fun MixerScreen(
 ) {
     val settings = LocalSettings.current
     var busSet by remember { mutableStateOf(engine.busList().toSet()) }
+    var showBusFxPresets by remember { mutableStateOf(false) }
+    var busFxPresetTarget by remember { mutableStateOf<Int?>(null) }
     var focusBusMode by remember { mutableStateOf(false) }
     var savedVolumesForFocus by remember { mutableStateOf<Map<Int, Float>>(emptyMap()) }
     var showRoutingMatrix by remember { mutableStateOf(false) }
@@ -148,6 +150,10 @@ fun MixerScreen(
                     onSlotTap = { slot -> showPicker = idx to slot },
                     onSendsTap = { showRouting = idx },
                     isBus = idx in busSet,
+                    onBusPresetTap = {
+                        busFxPresetTarget = idx
+                        showBusFxPresets = true
+                    },
                     onToggleBus = {
                         val now = !(idx in busSet)
                         engine.setBus(idx, now)
@@ -232,4 +238,16 @@ fun MixerScreen(
             onDismiss = { showRouting = null },
         )
     }
+    val busFxTgt = busFxPresetTarget
+    if (showBusFxPresets && busFxTgt != null) {
+        BusFxPresetDialog(
+            engine = engine,
+            track = busFxTgt,
+            trackName = tracks.firstOrNull { it.id == busFxTgt }?.name ?: "Track $busFxTgt",
+            settings = settings,
+            onApplied = { refresh(); showBusFxPresets = false; busFxPresetTarget = null },
+            onDismiss = { showBusFxPresets = false; busFxPresetTarget = null },
+        )
+    }
+
 }

@@ -26,6 +26,7 @@ fun MixerStrip(
     onSendsTap: () -> Unit = {},
     isBus: Boolean = false,
     onToggleBus: () -> Unit = {},
+    onBusPresetTap: () -> Unit = {},
     incomingSendCount: Int = 0,
 ) {
     Column(
@@ -66,7 +67,20 @@ fun MixerStrip(
                         .clickable { onToggleBus() }
                         .padding(horizontal = 3.dp, vertical = 1.dp),
                 )
-            }
+           
+                if (isBus) {
+                    Spacer(Modifier.width(2.dp))
+                    Text(
+                        "P",
+                        color = BgDeep,
+                        fontSize = 8.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .background(AccentCyan, RoundedCornerShape(2.dp))
+                            .clickable { onBusPresetTap() }
+                            .padding(horizontal = 3.dp, vertical = 1.dp),
+                    )
+                } }
         }
         Spacer(Modifier.height(2.dp))
 
