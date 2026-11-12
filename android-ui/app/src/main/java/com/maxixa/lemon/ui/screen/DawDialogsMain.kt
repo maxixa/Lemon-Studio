@@ -123,7 +123,7 @@ internal fun DawDialogsMain(
             sampleRate = engine.sampleRate,
             onComplete = { file -> onDismissRecordDialog(); onRecordingComplete(file) },
             onDismiss = onDismissRecordDialog,
-        )
+            bpm = engine.bpm,)
     }
 
     if (exportController.isExporting) {

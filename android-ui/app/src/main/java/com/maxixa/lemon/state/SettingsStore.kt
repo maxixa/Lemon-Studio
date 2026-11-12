@@ -76,6 +76,13 @@ class SettingsStore(ctx: Context) {
             .putStringSet("bus_tracks:$scope", v.map { it.toString() }.toSet())
             .apply()
     }
+
+    /** Count-in bars for mic recording: 0 = off, 1-4 = pre-roll length. */
+    var countInBars: Int
+        get() = prefs.getInt("record_count_in_bars", 0).coerceIn(0, 4)
+        set(v) {
+            prefs.edit().putInt("record_count_in_bars", v.coerceIn(0, 4)).apply()
+        }
 }
 
 /** Provided in MainActivity; read from any composable that needs settings. */
