@@ -27,6 +27,8 @@ fun MixerScreen(
 ) {
     val settings = LocalSettings.current
     var busSet by remember { mutableStateOf(engine.busList().toSet()) }
+    var focusBusMode by remember { mutableStateOf(false) }
+    var savedVolumesForFocus by remember { mutableStateOf<Map<Int, Float>>(emptyMap()) }
     var showRoutingMatrix by remember { mutableStateOf(false) }
     androidx.compose.runtime.LaunchedEffect(Unit) {
         val saved = settings.busTracksFor(engine.currentProjectName.ifEmpty { "demo" })
@@ -78,6 +80,40 @@ fun MixerScreen(
                 contentAlignment = Alignment.Center) { BackIcon(TextPrimary, 18.dp) }
             Text("Mixer", color = TextPrimary, fontSize = 14.sp,
                 modifier = Modifier.padding(start = 8.dp))
+
+            if (busSet.isNotEmpty() || focusBusMode) {
+                Text(
+                    if (focusBusMode) "Exit" else "Focus",
+                    color = BgDeep, fontSize = 10.sp,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                    modifier = Modifier
+                        .background(
+                            if (focusBusMode) AccentAmber else AccentCyan,
+                            androidx.compose.foundation.shape.RoundedCornerShape(4.dp),
+                        )
+                        .clickable {
+                            if (focusBusMode) {
+                                for ((src2, vol2) in savedVolumesForFocus) {
+                                    MixerBridge.setVolume(handle, src2, vol2)
+                                }
+                                savedVolumesForFocus = emptyMap()
+                                focusBusMode = false
+                                refresh()
+                            } else if (busSet.isNotEmpty()) {
+                                savedVolumesForFocus = tracks.associate { it.id to it.volume }
+                                for (tr in tracks) {
+                                    if (tr.id != 0 && tr.id !in busSet) {
+                                        MixerBridge.setVolume(handle, tr.id, 0f)
+                                    }
+                                }
+                                focusBusMode = true
+                                refresh()
+                            }
+                        }
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                )
+            }
+            Spacer(Modifier.width(6.dp))
             Spacer(Modifier.weight(1f))
             Text(
                 "Matrix",
