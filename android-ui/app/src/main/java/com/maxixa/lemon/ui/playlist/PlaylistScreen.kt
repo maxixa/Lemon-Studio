@@ -54,6 +54,15 @@ fun PlaylistScreen(
         }
 
     }
+    val cutSelected: () -> Unit = {
+        val sel = state.clips.filter { it.selected }
+        if (sel.isNotEmpty()) {
+            clipboard = sel.map { it.copy(id = 0L, selected = false) }
+            state.deleteSelected()
+            commit()
+        }
+    }
+
 
     val pasteAtPlayhead: () -> Unit = {
 
@@ -106,6 +115,7 @@ fun PlaylistScreen(
             tool = state.tool,
             hasSelection = state.clips.any { it.selected },
             onCopy = copySelected,
+            onCut = cutSelected,
             onPaste = pasteAtPlayhead,
             clipboardSize = clipboard.size,
             isPlaying = engine.isPlaying,

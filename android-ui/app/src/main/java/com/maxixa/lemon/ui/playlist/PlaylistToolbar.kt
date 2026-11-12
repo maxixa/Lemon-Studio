@@ -35,6 +35,7 @@ fun PlaylistToolbar(
     trimMode: Boolean,
     hasSelection: Boolean,
     onCopy: () -> Unit,
+    onCut: () -> Unit,
     onPaste: () -> Unit,
     clipboardSize: Int,
     onBack: () -> Unit,
@@ -95,6 +96,10 @@ fun PlaylistToolbar(
                 fontSize = 18.sp, fontWeight = FontWeight.Bold)
         }
         Slot(onAddClip) { AddIcon(TextPrimary, 18.dp) }
+        Slot(onCut) {
+            Text("\u2702", color = if (hasSelection) AccentAmber else TextMuted.copy(alpha = 0.4f),
+                fontSize = 14.sp, fontWeight = FontWeight.Bold)
+        }
         Slot(onCopy) {
             Text("C", color = if (hasSelection) AccentCyan else TextMuted.copy(alpha = 0.4f),
                 fontSize = 16.sp, fontWeight = FontWeight.Bold)
