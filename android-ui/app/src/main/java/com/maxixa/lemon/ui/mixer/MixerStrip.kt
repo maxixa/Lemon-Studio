@@ -26,10 +26,17 @@ fun MixerStrip(
     onSendsTap: () -> Unit = {},
     isBus: Boolean = false,
     onToggleBus: () -> Unit = {},
+    incomingSendCount: Int = 0,
 ) {
     Column(
         Modifier.width(72.dp).fillMaxHeight()
-            .background(if (isMaster) BgRaised else BgElevated)
+            .background(
+                when {
+                    isMaster -> BgRaised
+                    isBus -> AccentAmber.copy(alpha = 0.10f)
+                    else -> BgElevated
+                }
+            )
             .padding(4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -62,6 +69,24 @@ fun MixerStrip(
             }
         }
         Spacer(Modifier.height(2.dp))
+
+        if (isBus && incomingSendCount > 0) {
+
+            Text(
+
+                "← $incomingSendCount",
+
+                color = AccentAmber, fontSize = 8.sp,
+
+                fontWeight = FontWeight.Bold,
+
+                maxLines = 1,
+
+            )
+
+            Spacer(Modifier.height(2.dp))
+
+        }
 
         // Effect slots (4 visible)
         for (i in 0 until 4) {

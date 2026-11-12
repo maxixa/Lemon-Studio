@@ -42,6 +42,7 @@ fun MixerScreen(
     var tracks by remember { mutableStateOf<List<MixerTrackView>>(emptyList()) }
     var slots by remember { mutableStateOf<Map<Int, List<String>>>(emptyMap()) }
     var bypassed by remember { mutableStateOf<Map<Int, Set<Int>>>(emptyMap()) }
+    var incomingSends by remember { mutableStateOf<Map<Int, Int>>(emptyMap()) }
     var showPicker by remember { mutableStateOf<Pair<Int, Int>?>(null) }
     var showParamEditor by remember { mutableStateOf<Triple<Int, Int, String>?>(null) }
     var showRouting by remember { mutableStateOf<Int?>(null) }
@@ -56,9 +57,17 @@ fun MixerScreen(
                 engine.mixerIsEffectBypassed(t.id, i)
             }.toSet()
         }
+
+        val sendLevels = tracks.associate { t -> t.id to engine.mixerGetSends(t.id) }
+        incomingSends = tracks.associate { t ->
+            val n = sendLevels.count { (src, mm) -> src != t.id && (mm[t.id] ?: 0f) > 0.001f }
+            t.id to n
+        }
     }
 
     LaunchedEffect(handle) { refresh() }
+
+    LaunchedEffect(engine.revision) { refresh() }
 
     Column(Modifier.fillMaxSize().background(BgDeep)) {
         Row(
@@ -108,7 +117,8 @@ fun MixerScreen(
                         engine.setBus(idx, now)
                         busSet = if (now) busSet + idx else busSet - idx
                         settings.setBusTracksFor(engine.currentProjectName.ifEmpty { "demo" }, busSet)
-                    },)
+                    },
+                        incomingSendCount = incomingSends[idx] ?: 0,)
                 Spacer(Modifier.width(4.dp))
             }
         }
