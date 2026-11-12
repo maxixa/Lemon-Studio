@@ -26,6 +26,7 @@ class ExportController(private val handle: Long) {
 
     suspend fun export(fd: Int, songMode: Boolean, rate: Int, format: ExportFormat,
         bits: Int = 32,
+        mp3Kbps: Int = 192,
     ): ExportResult =
         withContext(Dispatchers.IO) {
             isExporting = true
@@ -34,7 +35,7 @@ class ExportController(private val handle: Long) {
                     ExportFormat.Wav  -> LemonEngineBridge.engineExportWav(handle, fd, songMode, rate, bits) * 4L
                     ExportFormat.Flac -> LemonEngineBridge.engineExportFlac(handle, fd, songMode, rate) * 6L
                     ExportFormat.Ogg  -> LemonEngineBridge.engineExportOgg(handle, fd, songMode, rate) * 4L
-                    ExportFormat.Mp3  -> LemonEngineBridge.engineExportMp3(handle, fd, songMode, rate, 192)
+                    ExportFormat.Mp3  -> LemonEngineBridge.engineExportMp3(handle, fd, songMode, rate, mp3Kbps)
                     ExportFormat.Midi -> LemonEngineBridge.engineExportMidi(handle, fd, songMode)
                 }
                 if (bytes > 0) {

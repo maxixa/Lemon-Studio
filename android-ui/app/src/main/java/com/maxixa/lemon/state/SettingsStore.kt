@@ -103,6 +103,10 @@ class SettingsStore(ctx: Context) {
     var exportWithStems: Boolean
         get() = prefs.getBoolean("export_with_stems", false)
         set(v) { prefs.edit().putBoolean("export_with_stems", v).apply() }
+
+    var exportMp3Kbps: Int
+        get() = prefs.getInt("export_mp3_kbps", 192)
+        set(v) { prefs.edit().putInt("export_mp3_kbps", v.coerceIn(64, 320)).apply() }
 }
 
 /** Provided in MainActivity; read from any composable that needs settings. */

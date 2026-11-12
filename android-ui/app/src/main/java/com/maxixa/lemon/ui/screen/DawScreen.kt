@@ -31,6 +31,7 @@ internal data class ExportRequest(
     val format: ExportFormat,
     val withStems: Boolean,
         val wavBits: Int = 32,
+        val mp3Kbps: Int = 192,
     )
 
 @Composable
@@ -185,6 +186,9 @@ fun DawScreen(onOpenSettings: () -> Unit = {}) {
             onRefetchPatternNames = { refetchPatternNames() },
         )
 
+        if (exportController.isExporting) {
+            com.maxixa.lemon.ui.export.ExportOverlay()
+        }
         DawDialogsMain(
             engine = engine, exportController = exportController,
             pathsStore = pathsStore, defaultFactory = defaultFactory,

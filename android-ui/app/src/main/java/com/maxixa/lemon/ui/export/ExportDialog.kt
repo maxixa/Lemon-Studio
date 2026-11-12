@@ -20,7 +20,7 @@ import com.maxixa.lemon.state.*
 
 @Composable
 fun ExportDialog(
-    onConfirm: (songMode: Boolean, rate: Int, format: ExportFormat, withStems: Boolean, wavBits: Int) -> Unit,
+    onConfirm: (songMode: Boolean, rate: Int, format: ExportFormat, withStems: Boolean, wavBits: Int, mp3Kbps: Int) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val ctx = androidx.compose.ui.platform.LocalContext.current
@@ -33,6 +33,7 @@ fun ExportDialog(
         catch (_: Throwable) { ExportFormat.Wav }
     ) }
     var wavBits by remember { mutableStateOf(settings.exportWavBits) }
+    var mp3Kbps by remember { mutableStateOf(settings.exportMp3Kbps) }
     var withStems by remember { mutableStateOf(settings.exportWithStems) }
 
     AlertDialog(
@@ -66,6 +67,16 @@ fun ExportDialog(
                         Toggle("16-bit", wavBits == 16) { wavBits = 16 }
                         Toggle("24-bit", wavBits == 24) { wavBits = 24 }
                         Toggle("32f",    wavBits == 32) { wavBits = 32 }
+                    }
+                    Spacer(Modifier.height(12.dp))
+                }
+                if (format == ExportFormat.Mp3) {
+                    Text("MP3 Bitrate", color = TextMuted, fontSize = 11.sp)
+                    Spacer(Modifier.height(6.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Toggle("128", mp3Kbps == 128) { mp3Kbps = 128 }
+                        Toggle("192", mp3Kbps == 192) { mp3Kbps = 192 }
+                        Toggle("320", mp3Kbps == 320) { mp3Kbps = 320 }
                     }
                     Spacer(Modifier.height(12.dp))
                 }
@@ -128,7 +139,7 @@ fun ExportDialog(
                         ExportFormat.Wav  -> if (wavBits == 32) "32-bit float stereo WAV" else "${wavBits}-bit stereo WAV"
                         ExportFormat.Flac -> "24-bit FLAC (lossless, ~50% smaller)"
 ExportFormat.Ogg  -> "Vorbis OGG (lossy, smaller than FLAC)"
-                        ExportFormat.Mp3  -> "192 kbps MP3 (lossy, smallest)"
+                        ExportFormat.Mp3  -> "${mp3Kbps} kbps MP3 (lossy, smallest)"
                         ExportFormat.Midi -> "Standard MIDI (.mid) — notes only"
                     },
                     color = TextMuted, fontSize = 10.sp,
@@ -148,7 +159,8 @@ ExportFormat.Ogg  -> "Vorbis OGG (lossy, smaller than FLAC)"
                 settings.exportFormatName = format.name
                 settings.exportWavBits = wavBits
                 settings.exportWithStems = withStems
-                onConfirm(songMode, rate, format, withStems, wavBits)
+                settings.exportMp3Kbps = mp3Kbps
+                onConfirm(songMode, rate, format, withStems, wavBits, mp3Kbps)
             }) {
                 Text("Export…", color = AccentOrange,
                     fontSize = 13.sp, fontWeight = FontWeight.SemiBold)

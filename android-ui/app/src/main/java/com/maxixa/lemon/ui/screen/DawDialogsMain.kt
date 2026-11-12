@@ -51,8 +51,8 @@ internal fun DawDialogsMain(
 ) {
     if (showExportDialog) {
         ExportDialog(
-            onConfirm = { song, rate, fmt, withStems, wavBits ->
-                onPendingExport(ExportRequest(song, rate, fmt, withStems, wavBits))
+            onConfirm = { song, rate, fmt, withStems, wavBits, mp3Kbps ->
+                onPendingExport(ExportRequest(song, rate, fmt, withStems, wavBits, mp3Kbps))
                 onDismissExportDialog()
                 onWithStems(withStems, fmt, wavBits)
             },
