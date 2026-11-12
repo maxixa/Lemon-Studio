@@ -27,6 +27,7 @@ fun MixerScreen(
 ) {
     val settings = LocalSettings.current
     var busSet by remember { mutableStateOf(engine.busList().toSet()) }
+    var showRoutingMatrix by remember { mutableStateOf(false) }
     androidx.compose.runtime.LaunchedEffect(Unit) {
         val saved = settings.busTracksFor(engine.currentProjectName.ifEmpty { "demo" })
         val current = engine.busList().toSet()
@@ -68,6 +69,17 @@ fun MixerScreen(
                 contentAlignment = Alignment.Center) { BackIcon(TextPrimary, 18.dp) }
             Text("Mixer", color = TextPrimary, fontSize = 14.sp,
                 modifier = Modifier.padding(start = 8.dp))
+            Spacer(Modifier.weight(1f))
+            Text(
+                "Matrix",
+                color = BgDeep, fontSize = 10.sp,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                modifier = Modifier
+                    .background(AccentCyan, androidx.compose.foundation.shape.RoundedCornerShape(4.dp))
+                    .clickable { showRoutingMatrix = true }
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+            )
+            Spacer(Modifier.width(6.dp))
         }
         Row(
             Modifier.fillMaxSize().horizontalScroll(rememberScrollState()).padding(4.dp),
@@ -157,6 +169,14 @@ fun MixerScreen(
     if (showRouting != null) {
         val tid = showRouting!!
         val tName = tracks.firstOrNull { it.id == tid }?.name ?: "Track $tid"
+        if (showRoutingMatrix) {
+            MixerRoutingMatrixDialog(
+                engine = engine,
+                trackNames = tracks.map { it.name },
+                onApplied = { showRoutingMatrix = false },
+                onDismiss = { showRoutingMatrix = false },
+            )
+        }
         SendRoutingDialog(
             engine = engine,
             trackId = tid,
