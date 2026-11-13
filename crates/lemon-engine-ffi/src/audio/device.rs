@@ -5,7 +5,7 @@
 //! When `engine` is `None` (no project loaded), the device outputs silence.
 
 use std::sync::{Arc, Mutex};
-use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::atomic::{AtomicU32, AtomicU64, Ordering};
 
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{BufferSize, FromSample, SampleFormat, SizedSample, Stream, StreamConfig};
@@ -75,8 +75,11 @@ fn build_with_fallback(
     // 5-10× slower than release; 512/1024 underrun constantly. Lower
     // back to 512 once a release build ships.
     let candidates = [
-        BufferSize::Fixed(2048),
-        BufferSize::Fixed(4096),
+        // Default only. Forced Fixed(512) and Fixed(2048) both xrun
+        // at identical ~8/sec on this MediaTek device whose HAL reports
+        // 85 ms latency floor — buffer size is NOT the bottleneck.
+        // Default engages cpal's self-tuning: starts conservative,
+        // grows on xrun. Correct path when device buffer is unknown.
         BufferSize::Default,
     ];
     for buf in candidates {
@@ -116,10 +119,13 @@ where
     // `Engine::process(&mut [f32])`'s expectation in tools/os-play.
     let mut stereo: Vec<f32> = Vec::with_capacity(8192);
 
+    let cb_count = Arc::new(AtomicU64::new(0));
+    let sum_us = Arc::new(AtomicU64::new(0));
     let xrun_counter_cb = Arc::new(AtomicU32::new(0));
     let stream = device.build_output_stream::<T, _, _>(
         config,
         move |out: &mut [T], _| {
+            let t_start = std::time::Instant::now();
             let frames = out.len() / channels;
             stereo.resize(frames * 2, 0.0);
 
@@ -167,6 +173,15 @@ where
                     };
                     *slot = T::from_sample(v.clamp(-1.0, 1.0));
                 }
+            }
+
+            let elapsed_us = t_start.elapsed().as_micros() as u64;
+            let n = cb_count.fetch_add(1, Ordering::Relaxed) + 1;
+            sum_us.fetch_add(elapsed_us, Ordering::Relaxed);
+            if n % 200 == 0 {
+                let avg = sum_us.swap(0, Ordering::Relaxed) / 200;
+                let budget_us = (frames as u64 * 1_000_000) / 48000;
+                log::info!("audio cb#{}: avg={}us budget={}us", n, avg, budget_us);
             }
         },
         move |err| {
