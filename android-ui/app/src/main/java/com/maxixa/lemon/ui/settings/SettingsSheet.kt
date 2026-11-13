@@ -19,6 +19,9 @@ import com.maxixa.lemon.state.EngineController
 import com.maxixa.lemon.state.LocalSettings
 import com.maxixa.lemon.ui.theme.*
 import com.maxixa.lemon.state.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.heightIn
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,7 +35,13 @@ fun SettingsSheet(
         containerColor = BgElevated,
         contentColor = TextPrimary,
     ) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp)) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .heightIn(max = 600.dp)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp, vertical = 8.dp)
+        ) {
             Text("Settings", color = TextPrimary, fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.height(20.dp))
