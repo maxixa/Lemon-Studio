@@ -124,9 +124,22 @@ where
             // samples are still in `stereo`, which is fine for one callback.
             match engine.as_ref() {
                 Some(arc) => match arc.try_lock() {
-                    Ok(mut guard) if !guard.finished() => guard.process(&mut stereo),
-                    _ => stereo.fill(0.0),
+                    Ok(mut guard) => {
+                        if guard.finished() {
+                            // Song ended — output silence.
+                            stereo.fill(0.0);
+                        } else {
+                            guard.process(&mut stereo);
+                        }
+                    }
+                    // try_lock failed (JNI thread holds the engine mutex).
+                    // Leave `stereo` untouched: re-emitting the previous frame
+                    // is a tiny ~10 ms pop; zeroing it produces a full-silence
+                    // click that is far louder. The previous code zeroed here,
+                    // contradicting its own comment — that was the crackle.
+                    Err(_) => { /* de-click: preserve previous frame */ }
                 },
+                // No project loaded — output silence.
                 None => stereo.fill(0.0),
             }
 
