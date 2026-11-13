@@ -19,6 +19,7 @@ impl AudioDevice {
     pub fn new(
         engine: Option<Arc<Mutex<Engine>>>,
         peak: Arc<AtomicU32>,
+        preferred_buffer_frames: u32,
     ) -> Result<Self, Box<dyn std::error::Error>> {
         let host = cpal::default_host();
         let device = host
@@ -35,7 +36,7 @@ impl AudioDevice {
             format
         );
 
-        let (stream, chosen_buf) = build_with_fallback(&device, &config, format, engine, peak.clone())?;
+        let (stream, chosen_buf) = build_with_fallback(&device, &config, format, engine, peak.clone(), preferred_buffer_frames)?;
 
         stream.play()?;
 
@@ -68,20 +69,18 @@ fn build_with_fallback(
     format: SampleFormat,
     engine: Option<Arc<Mutex<Engine>>>,
     peak: Arc<AtomicU32>,
+    preferred_buffer_frames: u32,
 ) -> Result<(Stream, BufferSize), Box<dyn std::error::Error>> {
     // 512 frames @ 48 kHz ≈ 10.7 ms — still a big win over the ~40 ms
     // default, but with ~2× the headroom of 256 to absorb CPU spikes.
     // 2048 frames @ 48 kHz ≈ 42.7 ms — debug-build Engine::process is
     // 5-10× slower than release; 512/1024 underrun constantly. Lower
     // back to 512 once a release build ships.
-    let candidates = [
-        // Default only. Forced Fixed(512) and Fixed(2048) both xrun
-        // at identical ~8/sec on this MediaTek device whose HAL reports
-        // 85 ms latency floor — buffer size is NOT the bottleneck.
-        // Default engages cpal's self-tuning: starts conservative,
-        // grows on xrun. Correct path when device buffer is unknown.
-        BufferSize::Default,
-    ];
+    let candidates: Vec<BufferSize> = if preferred_buffer_frames > 0 {
+        vec![BufferSize::Fixed(preferred_buffer_frames), BufferSize::Default]
+    } else {
+        vec![BufferSize::Fixed(8192), BufferSize::Fixed(16384), BufferSize::Default]
+    };
     for buf in candidates {
         let mut cfg = base_config.clone();
         cfg.buffer_size = buf;

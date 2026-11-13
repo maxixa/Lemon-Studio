@@ -113,6 +113,11 @@ class SettingsStore(ctx: Context) {
         get() = prefs.getInt("export_mp3_kbps", 192)
         set(v) { prefs.edit().putInt("export_mp3_kbps", v.coerceIn(64, 320)).apply() }
 
+    var audioBufferFrames: Int
+        get() = prefs.getInt("audio_buffer_frames", 8192)
+        set(v) { prefs.edit().putInt("audio_buffer_frames", v).apply() }
+
+
     private val BUS_FX_PREFIX = "bus_fx_preset:"
 
     fun listBusFxPresets(): List<String> =

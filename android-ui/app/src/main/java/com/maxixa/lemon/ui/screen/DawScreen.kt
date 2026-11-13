@@ -35,9 +35,11 @@ internal data class ExportRequest(
     )
 
 @Composable
-fun DawScreen(onOpenSettings: () -> Unit = {}) {
+fun DawScreen(
+    engine: EngineController,
+    onOpenSettings: () -> Unit = {},
+) {
     val ctx = LocalContext.current
-    val engine = remember { EngineController() }
     val scope = rememberCoroutineScope()
     val snackbarHost = remember { SnackbarHostState() }
     val pathsStore = remember { PathsStore(ctx) }

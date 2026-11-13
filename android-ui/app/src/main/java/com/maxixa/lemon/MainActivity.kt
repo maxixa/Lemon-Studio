@@ -27,6 +27,7 @@ class MainActivity : ComponentActivity() {
             CompositionLocalProvider(LocalSettings provides settings) {
                 LemonTheme {
                     var showSettings by remember { mutableStateOf(false) }
+                    val engine = remember { com.maxixa.lemon.state.EngineController() }
 
                     // App content — scaled
                     ScaledContent(scale = settings.uiScale.floatValue) {
@@ -36,13 +37,13 @@ class MainActivity : ComponentActivity() {
                                 .background(BgDeep)
                                 .safeDrawingPadding()
                         ) {
-                            DawScreen(onOpenSettings = { showSettings = true })
+                            DawScreen(engine = engine, onOpenSettings = { showSettings = true })
                         }
                     }
 
                     // Settings sheet — NOT scaled, so slider drag stays fixed
                     if (showSettings) {
-                        SettingsSheet(onDismiss = { showSettings = false })
+                        SettingsSheet(engine = engine, onDismiss = { showSettings = false })
                     }
                 }
             }

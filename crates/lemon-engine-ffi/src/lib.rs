@@ -2506,6 +2506,22 @@ pub extern "system" fn Java_com_maxixa_lemon_LemonEngineBridge_engineClearSample
 }
 
 #[unsafe(no_mangle)]
+pub extern "system" fn Java_com_maxixa_lemon_LemonEngineBridge_engineSetPreferredBufferFrames<'caller>(
+    mut unowned_env: EnvUnowned<'caller>,
+    _class: JClass<'caller>,
+    handle: jlong,
+    frames: jint,
+) -> jboolean {
+    unowned_env.with_env(|_env| -> jni::errors::Result<jboolean> {
+        if handle == 0 || frames < 0 { return Ok(false); }
+        let engine = unsafe { &mut *(handle as *mut EngineHandle) };
+        engine.set_preferred_buffer(frames as u32);
+        log::info!("setPreferredBufferFrames -> {}", frames);
+        Ok(true)
+    }).resolve::<ThrowRuntimeExAndDefault>()
+}
+
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_com_maxixa_lemon_LemonEngineBridge_engineStartAudio<'caller>(
     mut unowned_env: EnvUnowned<'caller>,
     _class: JClass<'caller>,
@@ -2526,7 +2542,7 @@ pub extern "system" fn Java_com_maxixa_lemon_LemonEngineBridge_engineStartAudio<
                 return Ok(false);
             }
             let engine_arc = engine.engine.clone();
-            match audio::AudioDevice::new(engine_arc, engine.master_peak.clone()) {
+            match audio::AudioDevice::new(engine_arc, engine.master_peak.clone(), engine.preferred_buffer()) {
                 Ok(dev) => {
                     engine.set_device(dev);
                     log::info!("audio device started");

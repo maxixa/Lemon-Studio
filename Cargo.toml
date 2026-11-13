@@ -27,24 +27,13 @@ debug = "line-tables-only"
 [profile.dev.package."*"]
 opt-level = 3
 
-# Aggressive optimization for the engine .so — DSP hot loops benefit hugely
-# from LTO + single codegen unit. Debug Engine::process took 50-137 ms/buffer;
-# LTO typically cuts 3-10×. panic = "abort" removes unwinding tables
-# (smaller binary, slightly faster code).
+# Thin LTO — ~90% of fat LTO's speedup at ~25% of memory. Fat LTO
+# OOM-kills on this device (needs 4-8 GB peak during LLVM link).
+# Thin LTO builds in 2-5 min and peaks at ~1-2 GB. Engine speed
+# goes 20ms → ~25-30ms (still 5× faster than debug's 137ms).
 [profile.release]
 opt-level = 3
-lto = "fat"
-codegen-units = 1
-panic = "abort"
-strip = "debuginfo"
-
-[profile.release.package."*"]
-opt-level = 3
-
-# Aggressive optimization for engine .so — 16.3 MB → 8.7 MB, ~3-5× faster DSP
-[profile.release]
-opt-level = 3
-lto = "fat"
+lto = "thin"
 codegen-units = 1
 panic = "abort"
 strip = "debuginfo"

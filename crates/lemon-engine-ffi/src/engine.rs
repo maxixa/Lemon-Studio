@@ -84,6 +84,7 @@ pub struct EngineHandle {
     pub channel_peaks: HashMap<u16, Vec<f32>>,
     pub effects: HashMap<(u16, u8), (SharedEffect, os_host::SharedPlugin)>,
     pub master_peak: Arc<AtomicU32>,
+    pub preferred_buffer_frames: AtomicU32,
     pub sample_map: HashMap<String, String>,
     pub bypassed: HashSet<(u16, u8)>,
     pub undo_stack: Vec<Snapshot>,
@@ -92,6 +93,15 @@ pub struct EngineHandle {
     pub bus_tracks: HashSet<u16>,}
 
 impl EngineHandle {
+
+    pub fn set_preferred_buffer(&mut self, frames: u32) {
+        self.preferred_buffer_frames.store(frames, Ordering::Relaxed);
+    }
+
+    pub fn preferred_buffer(&self) -> u32 {
+        self.preferred_buffer_frames.load(Ordering::Relaxed)
+    }
+
 
     pub fn is_bus(&self, track: u16) -> bool {
         self.bus_tracks.contains(&track)
@@ -125,6 +135,7 @@ impl EngineHandle {
             channel_peaks: HashMap::new(),
             effects: HashMap::new(),
             master_peak: Arc::new(AtomicU32::new(0)),
+            preferred_buffer_frames: AtomicU32::new(8192),
             sample_map: HashMap::new(),
             bypassed: HashSet::new(),
             undo_stack: Vec::new(),

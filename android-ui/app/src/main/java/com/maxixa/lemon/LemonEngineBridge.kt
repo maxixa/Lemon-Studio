@@ -9,6 +9,7 @@ object LemonEngineBridge {
     external fun engineLoadProjectFd(handle: Long, fd: Int): Boolean
     external fun engineLoadDemo(handle: Long): Boolean
     external fun engineStartAudio(handle: Long): Boolean
+    external fun engineSetPreferredBufferFrames(handle: Long, frames: Int): Boolean
     external fun engineStopAudio(handle: Long)
     external fun engineDispose(handle: Long)
     external fun engineVersion(): String
