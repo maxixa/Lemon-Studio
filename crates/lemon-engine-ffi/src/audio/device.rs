@@ -106,6 +106,17 @@ fn build_with_fallback(
     Err("all audio buffer candidates failed".into())
 }
 
+/// Smooth soft-clip. Linear below 0.7, gentle curve 0.7→1.5, saturates at 1.0.
+/// Hard clamp produces square-wave edges on clipped samples (harsh crackle);
+/// soft clip produces harmonics — audible as "loud" instead of "crunchy".
+fn soft_clip(x: f32) -> f32 {
+    let a = x.abs();
+    if a <= 0.7 { return x; }
+    if a >= 1.5 { return x.signum(); }
+    let t = (a - 0.7) / 0.8;
+    x.signum() * (0.7 + 0.3 * (t * t * (3.0 - 2.0 * t)))
+}
+
 fn build<T>(
     device: &cpal::Device,
     config: StreamConfig,
@@ -175,7 +186,7 @@ where
                         1 => s[1],
                         _ => 0.0,
                     };
-                    *slot = T::from_sample((v * gain).clamp(-1.0, 1.0));
+                    *slot = T::from_sample(soft_clip(if v.is_finite() { v * gain } else { 0.0 }));
                 }
             }
 
