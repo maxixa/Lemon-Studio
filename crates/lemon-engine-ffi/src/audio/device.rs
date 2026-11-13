@@ -71,9 +71,12 @@ fn build_with_fallback(
 ) -> Result<(Stream, BufferSize), Box<dyn std::error::Error>> {
     // 512 frames @ 48 kHz ≈ 10.7 ms — still a big win over the ~40 ms
     // default, but with ~2× the headroom of 256 to absorb CPU spikes.
+    // 2048 frames @ 48 kHz ≈ 42.7 ms — debug-build Engine::process is
+    // 5-10× slower than release; 512/1024 underrun constantly. Lower
+    // back to 512 once a release build ships.
     let candidates = [
-        BufferSize::Fixed(512),
-        BufferSize::Fixed(1024),
+        BufferSize::Fixed(2048),
+        BufferSize::Fixed(4096),
         BufferSize::Default,
     ];
     for buf in candidates {
@@ -113,6 +116,7 @@ where
     // `Engine::process(&mut [f32])`'s expectation in tools/os-play.
     let mut stereo: Vec<f32> = Vec::with_capacity(8192);
 
+    let xrun_counter_cb = Arc::new(AtomicU32::new(0));
     let stream = device.build_output_stream::<T, _, _>(
         config,
         move |out: &mut [T], _| {
@@ -165,7 +169,12 @@ where
                 }
             }
         },
-        |err| log::error!("audio stream error: {err}"),
+        move |err| {
+            let n = xrun_counter_cb.fetch_add(1, Ordering::Relaxed) + 1;
+            if n == 1 || n % 20 == 0 {
+                log::error!("audio stream xrun #{}: {err}", n);
+            }
+        },
         None,
     )?;
     Ok(stream)
