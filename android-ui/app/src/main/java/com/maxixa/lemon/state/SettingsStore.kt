@@ -117,6 +117,11 @@ class SettingsStore(ctx: Context) {
         get() = prefs.getInt("audio_buffer_frames", 8192)
         set(v) { prefs.edit().putInt("audio_buffer_frames", v).apply() }
 
+    var outputGain: Float
+        get() = prefs.getFloat("output_gain", 1.0f)
+        set(v) { prefs.edit().putFloat("output_gain", v.coerceIn(0.05f, 1.0f)).apply() }
+
+
 
     private val BUS_FX_PREFIX = "bus_fx_preset:"
 

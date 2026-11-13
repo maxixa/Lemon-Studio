@@ -20,6 +20,7 @@ impl AudioDevice {
         engine: Option<Arc<Mutex<Engine>>>,
         peak: Arc<AtomicU32>,
         preferred_buffer_frames: u32,
+        output_gain: Arc<AtomicU32>,
     ) -> Result<Self, Box<dyn std::error::Error>> {
         let host = cpal::default_host();
         let device = host
@@ -36,7 +37,7 @@ impl AudioDevice {
             format
         );
 
-        let (stream, chosen_buf) = build_with_fallback(&device, &config, format, engine, peak.clone(), preferred_buffer_frames)?;
+        let (stream, chosen_buf) = build_with_fallback(&device, &config, format, engine, peak.clone(), preferred_buffer_frames, output_gain)?;
 
         stream.play()?;
 
@@ -70,6 +71,7 @@ fn build_with_fallback(
     engine: Option<Arc<Mutex<Engine>>>,
     peak: Arc<AtomicU32>,
     preferred_buffer_frames: u32,
+    output_gain: Arc<AtomicU32>,
 ) -> Result<(Stream, BufferSize), Box<dyn std::error::Error>> {
     // 512 frames @ 48 kHz ≈ 10.7 ms — still a big win over the ~40 ms
     // default, but with ~2× the headroom of 256 to absorb CPU spikes.
@@ -85,10 +87,10 @@ fn build_with_fallback(
         let mut cfg = base_config.clone();
         cfg.buffer_size = buf;
         let result = match format {
-            SampleFormat::F32 => build::<f32>(device, cfg, engine.clone(), peak.clone()),
-            SampleFormat::I16 => build::<i16>(device, cfg, engine.clone(), peak.clone()),
-            SampleFormat::I32 => build::<i32>(device, cfg, engine.clone(), peak.clone()),
-            SampleFormat::U16 => build::<u16>(device, cfg, engine.clone(), peak.clone()),
+            SampleFormat::F32 => build::<f32>(device, cfg, engine.clone(), peak.clone(), output_gain.clone()),
+            SampleFormat::I16 => build::<i16>(device, cfg, engine.clone(), peak.clone(), output_gain.clone()),
+            SampleFormat::I32 => build::<i32>(device, cfg, engine.clone(), peak.clone(), output_gain.clone()),
+            SampleFormat::U16 => build::<u16>(device, cfg, engine.clone(), peak.clone(), output_gain.clone()),
             other => return Err(format!("unsupported sample format: {other:?}").into()),
         };
         match result {
@@ -109,6 +111,7 @@ fn build<T>(
     config: StreamConfig,
     engine: Option<Arc<Mutex<Engine>>>,
     peak: Arc<AtomicU32>,
+    output_gain: Arc<AtomicU32>,
 ) -> Result<Stream, Box<dyn std::error::Error>>
 where
     T: SizedSample + FromSample<f32>,
@@ -162,6 +165,8 @@ where
                 }
             }
 
+            // Output gain applied before clamp — prevents polyphonic voice-sum clipping.
+            let gain = f32::from_bits(output_gain.load(Ordering::Relaxed));
             // Map stereo to the device's channel layout.
             for (frame, s) in out.chunks_mut(channels).zip(stereo.chunks_exact(2)) {
                 for (c, slot) in frame.iter_mut().enumerate() {
@@ -170,7 +175,7 @@ where
                         1 => s[1],
                         _ => 0.0,
                     };
-                    *slot = T::from_sample(v.clamp(-1.0, 1.0));
+                    *slot = T::from_sample((v * gain).clamp(-1.0, 1.0));
                 }
             }
 

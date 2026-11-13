@@ -2520,6 +2520,22 @@ pub extern "system" fn Java_com_maxixa_lemon_LemonEngineBridge_engineSetPreferre
         Ok(true)
     }).resolve::<ThrowRuntimeExAndDefault>()
 }
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_maxixa_lemon_LemonEngineBridge_engineSetOutputGain<'caller>(
+    mut unowned_env: EnvUnowned<'caller>,
+    _class: JClass<'caller>,
+    handle: jlong,
+    gain: jdouble,
+) -> jboolean {
+    unowned_env.with_env(|_env| -> jni::errors::Result<jboolean> {
+        if handle == 0 { return Ok(false); }
+        let engine = unsafe { &mut *(handle as *mut EngineHandle) };
+        engine.set_output_gain(gain as f32);
+        log::info!("setOutputGain -> {:.3}", gain);
+        Ok(true)
+    }).resolve::<ThrowRuntimeExAndDefault>()
+}
+
 
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_com_maxixa_lemon_LemonEngineBridge_engineStartAudio<'caller>(
@@ -2542,7 +2558,7 @@ pub extern "system" fn Java_com_maxixa_lemon_LemonEngineBridge_engineStartAudio<
                 return Ok(false);
             }
             let engine_arc = engine.engine.clone();
-            match audio::AudioDevice::new(engine_arc, engine.master_peak.clone(), engine.preferred_buffer()) {
+            match audio::AudioDevice::new(engine_arc, engine.master_peak.clone(), engine.preferred_buffer(), engine.output_gain.clone()) {
                 Ok(dev) => {
                     engine.set_device(dev);
                     log::info!("audio device started");

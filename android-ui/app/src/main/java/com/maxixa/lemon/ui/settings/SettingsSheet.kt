@@ -98,6 +98,44 @@ fun SettingsSheet(
                 color = AccentOrange, fontSize = 10.sp,
                 fontFamily = FontFamily.Monospace,
             )
+            Spacer(Modifier.height(24.dp))
+            Text("Output Gain", color = TextPrimary, fontSize = 14.sp)
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "Lower = less polyphonic clipping. Applies live.",
+                color = TextMuted, fontSize = 10.sp,
+            )
+            Spacer(Modifier.height(8.dp))
+            androidx.compose.foundation.layout.Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                for ((gval, glabel) in listOf(
+                    1.0f to "0 dB",
+                    0.7f to "-3 dB",
+                    0.5f to "-6 dB",
+                    0.3f to "-10 dB",
+                    0.2f to "-14 dB",
+                    0.1f to "-20 dB",
+                )) {
+                    val active = kotlin.math.abs(settings.outputGain - gval) < 0.01f
+                    androidx.compose.material3.Text(
+                        glabel,
+                        color = if (active) BgDeep else TextMuted,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .background(
+                                if (active) AccentOrange else BgRaised,
+                                androidx.compose.foundation.shape.RoundedCornerShape(4.dp),
+                            )
+                            .clickable {
+                                settings.outputGain = gval
+                                engine.setOutputGain(gval)
+                            }
+                            .padding(horizontal = 6.dp, vertical = 4.dp),
+                    )
+                }
+            }
         }
     }
 }

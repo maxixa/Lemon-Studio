@@ -10,6 +10,7 @@ object LemonEngineBridge {
     external fun engineLoadDemo(handle: Long): Boolean
     external fun engineStartAudio(handle: Long): Boolean
     external fun engineSetPreferredBufferFrames(handle: Long, frames: Int): Boolean
+    external fun engineSetOutputGain(handle: Long, gain: Double): Boolean
     external fun engineStopAudio(handle: Long)
     external fun engineDispose(handle: Long)
     external fun engineVersion(): String

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import com.maxixa.lemon.state.LocalSettings
+import com.maxixa.lemon.state.*
 import com.maxixa.lemon.state.SettingsStore
 import com.maxixa.lemon.ui.screen.DawScreen
 import com.maxixa.lemon.ui.settings.SettingsSheet
@@ -28,6 +29,9 @@ class MainActivity : ComponentActivity() {
                 LemonTheme {
                     var showSettings by remember { mutableStateOf(false) }
                     val engine = remember { com.maxixa.lemon.state.EngineController() }
+                    androidx.compose.runtime.LaunchedEffect(Unit) {
+                        engine.setOutputGain(settings.outputGain)
+                    }
 
                     // App content — scaled
                     ScaledContent(scale = settings.uiScale.floatValue) {

@@ -85,6 +85,8 @@ pub struct EngineHandle {
     pub effects: HashMap<(u16, u8), (SharedEffect, os_host::SharedPlugin)>,
     pub master_peak: Arc<AtomicU32>,
     pub preferred_buffer_frames: AtomicU32,
+    /// Output gain (f32 bits). Multiplied before clamp in audio callback.
+    pub output_gain: Arc<AtomicU32>,
     pub sample_map: HashMap<String, String>,
     pub bypassed: HashSet<(u16, u8)>,
     pub undo_stack: Vec<Snapshot>,
@@ -100,6 +102,14 @@ impl EngineHandle {
 
     pub fn preferred_buffer(&self) -> u32 {
         self.preferred_buffer_frames.load(Ordering::Relaxed)
+    }
+
+    pub fn set_output_gain(&mut self, gain: f32) {
+        self.output_gain.store(gain.clamp(0.05, 2.0).to_bits(), Ordering::Relaxed);
+    }
+
+    pub fn output_gain(&self) -> f32 {
+        f32::from_bits(self.output_gain.load(Ordering::Relaxed))
     }
 
 
@@ -136,6 +146,7 @@ impl EngineHandle {
             effects: HashMap::new(),
             master_peak: Arc::new(AtomicU32::new(0)),
             preferred_buffer_frames: AtomicU32::new(8192),
+            output_gain: Arc::new(AtomicU32::new(1.0f32.to_bits())),
             sample_map: HashMap::new(),
             bypassed: HashSet::new(),
             undo_stack: Vec::new(),
