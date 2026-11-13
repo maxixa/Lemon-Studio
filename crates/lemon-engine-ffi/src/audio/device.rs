@@ -69,9 +69,11 @@ fn build_with_fallback(
     engine: Option<Arc<Mutex<Engine>>>,
     peak: Arc<AtomicU32>,
 ) -> Result<(Stream, BufferSize), Box<dyn std::error::Error>> {
+    // 512 frames @ 48 kHz ≈ 10.7 ms — still a big win over the ~40 ms
+    // default, but with ~2× the headroom of 256 to absorb CPU spikes.
     let candidates = [
-        BufferSize::Fixed(256),
         BufferSize::Fixed(512),
+        BufferSize::Fixed(1024),
         BufferSize::Default,
     ];
     for buf in candidates {
