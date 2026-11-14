@@ -11,6 +11,7 @@ name = "lemon_engine_ffi"
 crate-type = ["cdylib"]
 
 [dependencies]
+ringbuf = "0.4"
 os-engine       = { path = "../os-engine" }
 os-flp          = { path = "../os-flp" }
 os-model        = { path = "../os-model" }
