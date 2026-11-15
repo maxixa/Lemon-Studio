@@ -15,7 +15,7 @@ use ringbuf::{HeapRb, HeapProd, HeapCons};
 use ringbuf::traits::{Split, Producer, Consumer};
 
 const BLOCK_FRAMES: usize = 4096;
-const RING_BLOCKS: usize = 4;
+const RING_BLOCKS: usize = 8;
 
 type Block = Box<[f32]>;
 
@@ -38,8 +38,11 @@ fn spawn_render_thread(
                             else { guard.process(&mut block); }
                         }
                         Err(_) => {
-                            std::thread::sleep(std::time::Duration::from_millis(1));
-                            continue;
+                            // A1q.1 — JNI holds engine mutex. Don't skip push:
+                            // that drains the ring while render thread idles.
+                            // Push silence so ring stays fed; retry next iteration.
+                            TL_FAILS.fetch_add(1, Ordering::Relaxed);
+                            block.fill(0.0);
                         }
                     },
                     None => block.fill(0.0),
@@ -130,6 +133,9 @@ impl AudioDevice {
 ///
 /// Order: 256 frames (≈5.3 ms @ 48 kHz) → 512 (≈10.7 ms) → Default. Every
 /// fallback is byte-identical to today's behavior on the worst device.
+
+static TL_FAILS: std::sync::LazyLock<Arc<AtomicU32>> =
+    std::sync::LazyLock::new(|| Arc::new(AtomicU32::new(0)));
 
 impl Drop for AudioDevice {
     fn drop(&mut self) {
@@ -265,13 +271,13 @@ where
             let elapsed_us = t_start.elapsed().as_micros() as u64;
             let n = cb_count.fetch_add(1, Ordering::Relaxed) + 1;
             sum_us.fetch_add(elapsed_us, Ordering::Relaxed);
-            if n % 200 == 0 {
+            if n % 20 == 0 {
                 let avg = sum_us.swap(0, Ordering::Relaxed) / 200;
                 let budget_us = (total_frames as u64 * 1_000_000) / 48000;
                 let under = underrun_count.load(Ordering::Relaxed);
                 log::info!(
-                    "A1q cb#{}: avg={}us budget={}us underruns={} gain={:.2}",
-                    n, avg, budget_us, under, gain
+                    "A1q cb#{}: avg={}us budget={}us underruns={} tl_fails={} gain={:.2}",
+                    n, avg, budget_us, under, TL_FAILS.load(Ordering::Relaxed), gain
                 );
             }
         },
