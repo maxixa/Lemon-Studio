@@ -30,7 +30,12 @@ fn spawn_render_thread(
         .name("lemon-render".into())
         .spawn(move || {
             let mut block: Block = vec![0.0f32; BLOCK_FRAMES * 2].into_boxed_slice();
+            let mut iter_count: u64 = 0;
+            let mut sum_proc_us: u64 = 0;
+            let mut sum_loop_us: u64 = 0;
             while !stop.load(Ordering::Relaxed) {
+                let t_loop = std::time::Instant::now();
+                let t_proc = std::time::Instant::now();
                 match engine.as_ref() {
                     Some(arc) => match arc.try_lock() {
                         Ok(mut guard) => {
@@ -38,15 +43,13 @@ fn spawn_render_thread(
                             else { guard.process(&mut block); }
                         }
                         Err(_) => {
-                            // A1q.1 — JNI holds engine mutex. Don't skip push:
-                            // that drains the ring while render thread idles.
-                            // Push silence so ring stays fed; retry next iteration.
                             TL_FAILS.fetch_add(1, Ordering::Relaxed);
                             block.fill(0.0);
                         }
                     },
                     None => block.fill(0.0),
                 }
+                sum_proc_us += t_proc.elapsed().as_micros() as u64;
                 let mut local_peak = 0.0f32;
                 for &s in block.iter() {
                     let a = s.abs();
@@ -64,6 +67,19 @@ fn spawn_render_thread(
                             std::thread::sleep(std::time::Duration::from_millis(1));
                         }
                     }
+                }
+                sum_loop_us += t_loop.elapsed().as_micros() as u64;
+                iter_count += 1;
+                if iter_count % 100 == 0 {
+                    log::info!(
+                        "A1q render#{}: proc_avg={}us loop_avg={}us tl_fails={}",
+                        iter_count,
+                        sum_proc_us / 100,
+                        sum_loop_us / 100,
+                        TL_FAILS.load(Ordering::Relaxed),
+                    );
+                    sum_proc_us = 0;
+                    sum_loop_us = 0;
                 }
             }
         })
