@@ -4039,9 +4039,10 @@ fn render_voice_into(v: &mut Voice, channels: &[ChannelState], out: &mut [f32], 
             let i0 = (pos - w).ceil().max(0.0) as usize;
             let i1 = ((pos + w).floor() as usize).min(n - 1);
             let (mut l, mut r) = (0.0f64, 0.0f64);
+            let inv_scale = 1.0 / scale;
             for i in i0..=i1 {
                 let t = i as f64 - pos;
-                let k = sinc(t / scale) / scale * blackman(t, w);
+                let k = sinc(t * inv_scale) * inv_scale * blackman(t, w);
                 l += f64::from(s.left[i]) * k;
                 r += f64::from(s.right[i]) * k;
             }
