@@ -4172,7 +4172,7 @@ fn sinc(x: f64) -> f64 {
         1.0
     } else {
         let px = std::f64::consts::PI * x;
-        px.sin() / px
+        crate::trig::fast_sin(px) / px
     }
 }
 
@@ -4181,7 +4181,8 @@ fn blackman(t: f64, w: f64) -> f64 {
         return 0.0;
     }
     let x = std::f64::consts::PI * t / w;
-    0.42 + 0.5 * x.cos() + 0.08 * (2.0 * x).cos()
+    let c1 = crate::trig::fast_cos(x);
+    0.42 + 0.5 * c1 + 0.08 * (2.0 * c1 * c1 - 1.0)
 }
 
 /// One mixer track's own state for its turn in a tick (`mix_track`).
