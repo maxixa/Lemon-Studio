@@ -29,6 +29,7 @@ pub mod parallel;
 pub mod sample;
 pub mod voices;
 pub mod wav;
+pub mod trig;
 
 pub use clock::Clock;
 pub use engine::{input_channels, live_edits, scheduled_notes, DeviceInput, Engine, EngineReport, LiveEdit, LoadGate, PlayMode, RecordPoint, RecordTap};

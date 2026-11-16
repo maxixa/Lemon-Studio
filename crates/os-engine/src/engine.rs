@@ -4129,9 +4129,10 @@ fn render_voice_into(v: &mut Voice, channels: &[ChannelState], out: &mut [f32], 
             let i0 = (pos - w).ceil().max(0.0) as usize;
             let i1 = ((pos + w).floor() as usize).min(n - 1);
             let (mut l, mut r) = (0.0f64, 0.0f64);
+            let inv_scale = 1.0 / scale;
             for i in i0..=i1 {
                 let t = i as f64 - pos;
-                let k = sinc(t / scale) / scale * blackman(t, w);
+                let k = sinc(t * inv_scale) * inv_scale * blackman(t, w);
                 l += f64::from(s.left[i]) * k;
                 r += f64::from(s.right[i]) * k;
             }
@@ -4172,7 +4173,7 @@ fn sinc(x: f64) -> f64 {
         1.0
     } else {
         let px = std::f64::consts::PI * x;
-        px.sin() / px
+        crate::trig::fast_sin(px) / px
     }
 }
 
@@ -4181,7 +4182,8 @@ fn blackman(t: f64, w: f64) -> f64 {
         return 0.0;
     }
     let x = std::f64::consts::PI * t / w;
-    0.42 + 0.5 * x.cos() + 0.08 * (2.0 * x).cos()
+    let c1 = crate::trig::fast_cos(x);
+    0.42 + 0.5 * c1 + 0.08 * (2.0 * c1 * c1 - 1.0)
 }
 
 /// One mixer track's own state for its turn in a tick (`mix_track`).
