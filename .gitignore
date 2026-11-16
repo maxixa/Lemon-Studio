@@ -13,3 +13,6 @@ CLAUDE.md
 
 # macOS Finder metadata
 .DS_Store
+android-ui/app/src/main/jniLibs/**/*.so
+target/
+*.so
