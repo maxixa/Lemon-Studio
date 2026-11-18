@@ -4040,11 +4040,38 @@ fn render_voice_into(v: &mut Voice, channels: &[ChannelState], out: &mut [f32], 
             let i1 = ((pos + w).floor() as usize).min(n - 1);
             let (mut l, mut r) = (0.0f64, 0.0f64);
             let inv_scale = 1.0 / scale;
-            for i in i0..=i1 {
+            // 4-way unroll for ILP: four independent sinc() chains let the
+            // scheduler overlap wavetable lookups across taps. Accumulation
+            // order within each of l and r stays tap-sequential, so the
+            // output is bit-identical to the unrolled version's source -
+            // f64 + is non-associative, and LLVM without -ffast-math cannot
+            // reorder either accumulator.
+            let mut i = i0;
+            while i + 3 <= i1 {
+                let t0 = i as f64 - pos;
+                let t1 = (i + 1) as f64 - pos;
+                let t2 = (i + 2) as f64 - pos;
+                let t3 = (i + 3) as f64 - pos;
+                let k0 = sinc(t0 * inv_scale) * inv_scale * blackman(t0, w);
+                let k1 = sinc(t1 * inv_scale) * inv_scale * blackman(t1, w);
+                let k2 = sinc(t2 * inv_scale) * inv_scale * blackman(t2, w);
+                let k3 = sinc(t3 * inv_scale) * inv_scale * blackman(t3, w);
+                l += f64::from(s.left[i]) * k0;
+                l += f64::from(s.left[i + 1]) * k1;
+                l += f64::from(s.left[i + 2]) * k2;
+                l += f64::from(s.left[i + 3]) * k3;
+                r += f64::from(s.right[i]) * k0;
+                r += f64::from(s.right[i + 1]) * k1;
+                r += f64::from(s.right[i + 2]) * k2;
+                r += f64::from(s.right[i + 3]) * k3;
+                i += 4;
+            }
+            while i <= i1 {
                 let t = i as f64 - pos;
                 let k = sinc(t * inv_scale) * inv_scale * blackman(t, w);
                 l += f64::from(s.left[i]) * k;
                 r += f64::from(s.right[i]) * k;
+                i += 1;
             }
             (l as f32, r as f32)
         };
