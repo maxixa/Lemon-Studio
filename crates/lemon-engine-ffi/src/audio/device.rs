@@ -115,10 +115,43 @@ impl AudioDevice {
         );
 
         let ring_fill = Arc::new(AtomicUsize::new(0));
-        let (stream, chosen_buf, producer) = build_with_fallback(
+        let (stream, chosen_buf, mut producer) = build_with_fallback(
             &device, &config, format,
             preferred_buffer_frames, output_gain, ring_fill.clone(),
         )?;
+
+        // A1q.3 — prime the ring before stream.play() so the very first audio
+        // callback finds data ready. Prevents the one-shot startup underrun
+        // observed at cb#20 (first callback fires before the render thread has
+        // pushed anything → ~170 ms of silence on the very first pop).
+        // Costs one process() call (~60 ms) at setup time; never on the audio
+        // thread. Engine state advances by one block here — musically identical,
+        // just 170 ms less "wait" before audio starts.
+        {
+            let mut primed = false;
+            if let Some(arc) = &engine {
+                if let Ok(mut guard) = arc.try_lock() {
+                    if !guard.finished() {
+                        let mut block: Block =
+                            vec![0.0f32; BLOCK_FRAMES * 2].into_boxed_slice();
+                        guard.process(&mut block);
+                        if producer.try_push(block).is_ok() {
+                            ring_fill.fetch_add(1, Ordering::Relaxed);
+                            primed = true;
+                        }
+                    }
+                }
+            }
+            if !primed {
+                // Fallback: prime with silence. First callback won't underrun;
+                // render thread replaces subsequent blocks with real audio.
+                let silence: Block = vec![0.0f32; BLOCK_FRAMES * 2].into_boxed_slice();
+                if producer.try_push(silence).is_ok() {
+                    ring_fill.fetch_add(1, Ordering::Relaxed);
+                }
+            }
+        }
+
         let stop = Arc::new(AtomicBool::new(false));
         let _render_thread = Some(spawn_render_thread(
             engine, producer, stop.clone(), peak, ring_fill,
