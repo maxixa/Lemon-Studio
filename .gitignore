@@ -1,15 +1,76 @@
-/target
-/target-*/
-target-dev/
+# ═══════════════════════════════════════════════════════════════════════
+# Track only source. Everything below is a build artifact, binary,
+# cache, IDE state, or machine-specific config — never committed.
+# ═══════════════════════════════════════════════════════════════════════
 
-# Project files and audio never belong in the repo
-*.flp
-*.wav
+# ─── Rust build outputs ────────────────────────────────────────────────
+/target/
+**/target/
+*.rs.bk
+*.pdb
 
-# Local notes and secrets
-.env
-CLAUDE.md
-.claude/
+# ─── Android / Gradle build outputs ───────────────────────────────────
+android-ui/app/build/
+android-ui/build/
+android-ui/.gradle/
+android-ui/.cxx/
+android-ui/.externalNativeBuild/
+android-ui/captures/
+android-ui/app/release/
+android-ui/app/debug/
+.gradle/
 
-# macOS Finder metadata
+# ─── Binaries (rebuilt from source every build) ───────────────────────
+*.so
+*.so.*
+*.a
+*.o
+*.dylib
+*.dll
+*.exe
+*.dSYM/
+android-ui/app/src/main/jniLibs/
+
+# ─── Android artifacts ────────────────────────────────────────────────
+*.apk
+*.aab
+*.aar
+*.class
+*.dex
+# keep gradle wrapper (needed for builds)
+!gradle/wrapper/gradle-wrapper.jar
+
+# ─── Machine-specific config ──────────────────────────────────────────
+android-ui/local.properties
+*.keystore
+!debug.keystore
+
+# ─── IDE / editor state ───────────────────────────────────────────────
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+*~
+.#*
+
+# ─── OS metadata ──────────────────────────────────────────────────────
 .DS_Store
+Thumbs.db
+Desktop.ini
+
+# ─── Logs, temp, dumps ────────────────────────────────────────────────
+*.log
+*.tmp
+*.bak
+*.orig
+*.rej
+crash-*.txt
+hs_err_pid*.log
+
+# ─── Local dev-only files ─────────────────────────────────────────────
+CLAUDE.md
+.lemon-logs/
+*.flp
+# (uncomment *.flp above if demo projects should not be tracked —
+#  currently ignored to match existing behavior)
