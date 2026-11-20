@@ -1,0 +1,15 @@
+[package]
+name = "lemon-ext-api"
+version = "1.0.0"
+edition = "2024"
+license = "GPL-3.0-or-later"
+description = "Extension API for Lemon Studio — note editors, note generators, song generators"
+publish = false
+
+[lib]
+name = "lemon_ext_api"
+path = "src/lib.rs"
+
+[dependencies]
+bitflags = "2"
+inventory = "0.3"
