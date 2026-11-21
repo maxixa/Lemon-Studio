@@ -92,6 +92,23 @@ pub struct ReferenceTrack {
     pub notes: Vec<Note>,
 }
 
+impl TargetRange {
+    pub fn new(track_idx: usize, pattern_idx: usize, start_tick: u32, length_ticks: u32) -> Self {
+        Self { track_idx, pattern_idx, start_tick, length_ticks }
+    }
+}
+
+impl ReferenceTrack {
+    pub fn new(track_idx: usize, pattern_idx: usize, track_name: impl Into<String>, notes: Vec<Note>) -> Self {
+        Self { track_idx, pattern_idx, track_name: track_name.into(), instrument_category: None, notes }
+    }
+    pub fn with_instrument_category(mut self, cat: InstrumentCategory) -> Self {
+        self.instrument_category = Some(cat); self
+    }
+}
+
+
+
 bitflags::bitflags! {
     /// Bitflags — combine freely.
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -128,3 +145,51 @@ pub struct SongContext {
     pub max_tracks: u32,
     pub references: Vec<ReferenceTrack>,
 }
+
+impl GenContext {
+    /// Minimal constructor. Use `.with_*()` builders to fill optional fields.
+    pub fn new(ppq: u32, target: TargetRange, seed: u64) -> Self {
+        let bar_ticks = ((ppq as u64 * 4) / 4) as u32; // 4/4 default
+        Self {
+            tempo_bpm: 120.0,
+            time_sig: TimeSig::COMMON,
+            ppq,
+            target,
+            held_notes: vec![],
+            references: vec![],
+            scale: None,
+            seed,
+            pattern_len: bar_ticks * 4,
+        }
+    }
+    pub fn with_tempo(mut self, bpm: f64) -> Self { self.tempo_bpm = bpm; self }
+    pub fn with_time_sig(mut self, ts: TimeSig) -> Self { self.time_sig = ts; self }
+    pub fn with_scale(mut self, s: Scale) -> Self { self.scale = Some(s); self }
+    pub fn with_held_notes(mut self, notes: Vec<Note>) -> Self { self.held_notes = notes; self }
+    pub fn with_references(mut self, refs: Vec<ReferenceTrack>) -> Self { self.references = refs; self }
+    pub fn with_pattern_len(mut self, ticks: u32) -> Self { self.pattern_len = ticks; self }
+}
+
+impl SongContext {
+    /// Minimal constructor. Use `.with_*()` builders for optional fields.
+    pub fn new(ppq: u32, seed: u64) -> Self {
+        Self {
+            tempo_hint: None,
+            time_sig: TimeSig::COMMON,
+            key: None,
+            length_bars: 16,
+            ppq,
+            seed,
+            max_tracks: 16,
+            references: vec![],
+        }
+    }
+    pub fn with_tempo_hint(mut self, bpm: f64) -> Self { self.tempo_hint = Some(bpm); self }
+    pub fn with_time_sig(mut self, ts: TimeSig) -> Self { self.time_sig = ts; self }
+    pub fn with_key(mut self, s: Scale) -> Self { self.key = Some(s); self }
+    pub fn with_length_bars(mut self, bars: u32) -> Self { self.length_bars = bars; self }
+    pub fn with_max_tracks(mut self, n: u32) -> Self { self.max_tracks = n; self }
+    pub fn with_references(mut self, refs: Vec<ReferenceTrack>) -> Self { self.references = refs; self }
+}
+
+

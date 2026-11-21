@@ -1274,6 +1274,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "ext-example-quantize"
+version = "0.1.0"
+dependencies = [
+ "inventory",
+ "lemon-ext-api",
+]
+
+[[package]]
+name = "ext-song-gen-lofi"
+version = "0.1.0"
+dependencies = [
+ "inventory",
+ "lemon-ext-api",
+]
+
+[[package]]
 name = "extended"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2012,6 +2028,8 @@ dependencies = [
  "citrus",
  "cpal",
  "crossbeam-queue",
+ "ext-example-quantize",
+ "ext-song-gen-lofi",
  "flacenc",
  "jni 0.22.4",
  "lemon-3x-osc",
@@ -2019,6 +2037,7 @@ dependencies = [
  "lemon-chorus",
  "lemon-delay",
  "lemon-drum-sampler",
+ "lemon-ext-api",
  "lemon-fast-distortion",
  "lemon-filter",
  "lemon-flanger",
@@ -2042,6 +2061,8 @@ dependencies = [
  "os-host",
  "os-model",
  "ringbuf",
+ "serde",
+ "serde_json",
  "vorbis_rs",
 ]
 

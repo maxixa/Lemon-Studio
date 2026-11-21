@@ -1,0 +1,15 @@
+[package]
+name = "ext-song-gen-lofi"
+version = "0.1.0"
+edition = "2024"
+license = "GPL-3.0-or-later"
+description = "Lo-fi beat song generator — drums, bass, keys, 16-bar arrangement"
+publish = false
+
+[lib]
+name = "ext_song_gen_lofi"
+path = "src/lib.rs"
+
+[dependencies]
+lemon-ext-api = { path = "../../crates/lemon-ext-api" }
+inventory = "0.3"
