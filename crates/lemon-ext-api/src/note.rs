@@ -6,7 +6,6 @@ use crate::instrument::InstrumentHint;
 use crate::params::{ParamSpec, ParamValues};
 use crate::ui::UiSpec;
 
-#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Note {
     pub start_tick: u32,
@@ -77,7 +76,6 @@ pub trait NoteGenerator: Send + Sync + 'static {
     fn max_output_notes(&self) -> usize { 100_000 }
 }
 
-#[non_exhaustive]
 #[derive(Debug, Clone, Default)]
 pub struct NoteGeneratorOutput {
     /// Notes placed in the target track/pattern.
@@ -91,7 +89,6 @@ impl NoteGeneratorOutput {
     pub fn with_secondary(mut self, s: SecondaryTrack) -> Self { self.secondary.push(s); self }
 }
 
-#[non_exhaustive]
 #[derive(Debug, Clone)]
 pub struct SecondaryTrack {
     pub target: SecondaryTarget,

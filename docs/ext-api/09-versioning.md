@@ -36,3 +36,12 @@ When 2.0 happens
 Host evolution
 
 Lemon core can evolve freely (new engine features, new plugin formats) as long as lemon-ext-api stays 1.x. Extensions never see engine internals. Adding a new trait family (e.g., ArrangementEditor) in 1.x is fine — new extension families can appear without breaking old ones.
+
+
+## Correction (post-1.0.0 ship)
+
+**Value types are open, context types are `#[non_exhaustive]`.**
+
+- **Value types you construct** (`Note`, `ParamSpec`, `InstrumentHint`, `SongSketch`, `TrackSketch`, `PatternSketch`, `ArrangementSketch`, `ClipRef`, `SectionLabel`, `UiSpec`, `Section`, `Field`, `DropdownOption`, `Condition`, `TimeSig`, `Scale`, `NoteGeneratorOutput`, `SecondaryTrack`) — **not** `#[non_exhaustive]`. You can use struct literals and `..*n` update syntax freely. Adding a field to these is a semver-minor; use builders for forward compatibility if you want to be extra safe.
+- **Context types the host provides** (`GenContext`, `SongContext`, `TargetRange`, `ReferenceTrack`) — `#[non_exhaustive]`. You read fields; the host may add new ones without breaking you.
+- **Enums** (`ParamValue`, `WidgetKind`, `PreviewKind`, `ExtError`, `SecondaryTarget`, `InstrumentCategory`, `ScaleMode`, `ParamCurve`) — `#[non_exhaustive]`. Match with a `_` arm; you can still construct any variant.

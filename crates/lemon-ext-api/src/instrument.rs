@@ -27,7 +27,6 @@ impl InstrumentCategory {
     }
 }
 
-#[non_exhaustive]
 #[derive(Debug, Clone)]
 pub struct InstrumentHint {
     pub category: InstrumentCategory,

@@ -30,7 +30,6 @@ pub trait SongGenerator: Send + Sync + 'static {
     fn generate(&self, ctx: &SongContext, params: &ParamValues) -> ExtResult<SongSketch>;
 }
 
-#[non_exhaustive]
 #[derive(Debug, Clone)]
 pub struct SongSketch {
     pub tempo: f64,
@@ -50,7 +49,6 @@ impl SongSketch {
     pub fn with_summary(mut self, s: impl Into<String>) -> Self { self.summary = s.into(); self }
 }
 
-#[non_exhaustive]
 #[derive(Debug, Clone)]
 pub struct TrackSketch {
     pub name: String,
@@ -74,7 +72,6 @@ impl TrackSketch {
     }
 }
 
-#[non_exhaustive]
 #[derive(Debug, Clone)]
 pub struct PatternSketch {
     pub name: String,
@@ -89,7 +86,6 @@ impl PatternSketch {
     pub fn with_notes(mut self, notes: Vec<Note>) -> Self { self.notes = notes; self }
 }
 
-#[non_exhaustive]
 #[derive(Debug, Clone, Default)]
 pub struct ArrangementSketch {
     pub clips: Vec<ClipRef>,
@@ -102,7 +98,6 @@ impl ArrangementSketch {
     pub fn with_section(mut self, s: SectionLabel) -> Self { self.sections.push(s); self }
 }
 
-#[non_exhaustive]
 #[derive(Debug, Clone)]
 pub struct ClipRef {
     pub track_idx: usize,
@@ -111,7 +106,6 @@ pub struct ClipRef {
     pub length_bars: u32,
 }
 
-#[non_exhaustive]
 #[derive(Debug, Clone)]
 pub struct SectionLabel {
     pub name: String,           // "Intro", "Verse 1", "Chorus", "Bridge"

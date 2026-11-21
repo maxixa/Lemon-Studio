@@ -3,7 +3,6 @@
 
 use crate::params::ParamValue;
 
-#[non_exhaustive]
 #[derive(Debug, Clone)]
 pub struct UiSpec {
     pub sections: Vec<Section>,
@@ -24,7 +23,6 @@ impl UiSpec {
     pub fn with_estimated_ms(mut self, ms: u32) -> Self { self.estimated_ms = ms; self }
 }
 
-#[non_exhaustive]
 #[derive(Debug, Clone)]
 pub struct Section {
     pub title: &'static str,
@@ -40,7 +38,6 @@ impl Section {
     pub fn collapsed(mut self) -> Self { self.collapsed_by_default = true; self }
 }
 
-#[non_exhaustive]
 #[derive(Debug, Clone)]
 pub struct Field {
     pub id: &'static str,
@@ -69,14 +66,12 @@ pub enum WidgetKind {
     Range { min: f32, max: f32, step: f32, default_lo: f32, default_hi: f32 },
 }
 
-#[non_exhaustive]
 #[derive(Debug, Clone, Copy)]
 pub struct DropdownOption {
     pub id: &'static str,
     pub label: &'static str,
 }
 
-#[non_exhaustive]
 #[derive(Debug, Clone)]
 pub struct Condition {
     pub field_id: &'static str,

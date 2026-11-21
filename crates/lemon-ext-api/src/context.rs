@@ -3,7 +3,6 @@
 use crate::instrument::InstrumentCategory;
 use crate::note::Note;
 
-#[non_exhaustive]
 #[derive(Debug, Clone, Copy)]
 pub struct TimeSig {
     pub numerator: u8,
@@ -47,7 +46,6 @@ impl ScaleMode {
     }
 }
 
-#[non_exhaustive]
 #[derive(Debug, Clone, Copy)]
 pub struct Scale {
     pub root: u8,   // 0..=11, C=0

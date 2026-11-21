@@ -11,7 +11,6 @@ pub enum ParamCurve {
     Discrete,
 }
 
-#[non_exhaustive]
 #[derive(Debug, Clone)]
 pub struct ParamSpec {
     pub id: &'static str,
@@ -24,11 +23,11 @@ pub struct ParamSpec {
 }
 
 impl ParamSpec {
-    pub fn new(id: &'static str, name: &'static str, min: f32, max: f32, default: f32) -> Self {
+    pub const fn new(id: &'static str, name: &'static str, min: f32, max: f32, default: f32) -> Self {
         Self { id, name, min, max, default, unit: "", curve: ParamCurve::Linear }
     }
-    pub fn unit(mut self, u: &'static str) -> Self { self.unit = u; self }
-    pub fn curve(mut self, c: ParamCurve) -> Self { self.curve = c; self }
+    pub const fn unit(mut self, u: &'static str) -> Self { self.unit = u; self }
+    pub const fn curve(mut self, c: ParamCurve) -> Self { self.curve = c; self }
 }
 
 #[non_exhaustive]
