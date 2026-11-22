@@ -1282,6 +1282,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "ext-solo-guitar"
+version = "0.1.0"
+dependencies = [
+ "inventory",
+ "lemon-ext-api",
+]
+
+[[package]]
 name = "ext-song-gen-lofi"
 version = "0.1.0"
 dependencies = [
@@ -2029,6 +2037,7 @@ dependencies = [
  "cpal",
  "crossbeam-queue",
  "ext-example-quantize",
+ "ext-solo-guitar",
  "ext-song-gen-lofi",
  "flacenc",
  "jni 0.22.4",

@@ -24,6 +24,7 @@ use lemon_ext_api::{
 // Adding a new extension: add one `use` line here + one line in Cargo.toml.
 use ext_example_quantize as _;
 use ext_song_gen_lofi as _;
+use ext_solo_guitar as _;
 
 // ═══════════════════════════════════════════════════════════════
 // Wire types — exchange format for JNI. Snake_case in Rust, camelCase in JSON.

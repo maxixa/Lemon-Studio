@@ -1,0 +1,15 @@
+[package]
+name = "ext-solo-guitar"
+version = "0.1.0"
+edition = "2024"
+license = "GPL-3.0-or-later"
+description = "Solo guitar over an existing chord progression (NoteGenerator with references)"
+publish = false
+
+[lib]
+name = "ext_solo_guitar"
+path = "src/lib.rs"
+
+[dependencies]
+lemon-ext-api = { path = "../../crates/lemon-ext-api" }
+inventory = "0.3"

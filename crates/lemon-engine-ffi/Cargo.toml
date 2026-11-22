@@ -11,6 +11,7 @@ name = "lemon_engine_ffi"
 crate-type = ["cdylib"]
 
 [dependencies]
+ext-solo-guitar = { path = "../../extensions/solo-guitar" }
 ext-song-gen-lofi = { path = "../../extensions/song-gen-lofi" }
 ext-example-quantize = { path = "../../extensions/example-quantize" }
 lemon-ext-api = { path = "../lemon-ext-api" }
