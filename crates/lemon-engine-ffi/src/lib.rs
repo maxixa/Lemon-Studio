@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //! Lemon Studio engine — JNI bridge (jni 0.22 API).
 
+pub mod ext;
+
 use std::os::raw::c_void;
 use std::sync::OnceLock;
 

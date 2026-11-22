@@ -72,6 +72,13 @@ object ExtHost {
         Log.e(TAG, "runSongGenerator($id) threw", t); null
     }
 
+    /** Generate + apply in one call. Returns Summary or null on failure. */
+    fun generateAndApply(handle: Long, generatorId: String, params: Map<String, Float>)
+        : com.maxixa.lemon.ext.SongApplier.Summary? {
+        val sketchJson = runSongGenerator(generatorId, params) ?: return null
+        return com.maxixa.lemon.ext.SongApplier.apply(handle, sketchJson)
+    }
+
     private fun parseInfo(o: JSONObject): Info {
         val pa = o.optJSONArray("params") ?: JSONArray()
         val ui = o.optJSONObject("ui") ?: JSONObject()

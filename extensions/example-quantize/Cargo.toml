@@ -1,0 +1,15 @@
+[package]
+name = "ext-example-quantize"
+version = "0.1.0"
+edition = "2024"
+license = "GPL-3.0-or-later"
+description = "Reference NoteEditor extension: quantizes note starts to a grid"
+publish = false
+
+[lib]
+name = "ext_example_quantize"
+path = "src/lib.rs"
+
+[dependencies]
+lemon-ext-api = { path = "../../crates/lemon-ext-api" }
+inventory = "0.3"
