@@ -416,3 +416,192 @@ pub extern "system" fn Java_com_maxixa_lemon_ExtHost_nativeExtRunSong<'caller>(
     });
     result
 }
+
+
+
+// ═══════════════════════════════════════════════════════════════
+// NoteGenerator wire types (companion to RunInput for editors)
+// ═══════════════════════════════════════════════════════════════
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct GenInput {
+    #[serde(default)] params: serde_json::Map<String, Value>,
+    #[serde(default = "default_ppq")] ppq: u32,
+    #[serde(default = "default_tempo")] tempo: f64,
+    #[serde(default)] seed: u64,
+    #[serde(default)] target: Option<WireTargetRange>,
+    #[serde(default)] references: Vec<WireReferenceTrack>,
+    #[serde(default)] held_notes: Vec<WireNote>,
+    #[serde(default)] scale: Option<WireScale>,
+    #[serde(default)] pattern_len: u32,
+}
+
+fn default_ppq() -> u32 { 96 }
+fn default_tempo() -> f64 { 120.0 }
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct WireTargetRange {
+    track_idx: usize,
+    pattern_idx: usize,
+    start_tick: u32,
+    length_ticks: u32,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct WireReferenceTrack {
+    track_idx: usize,
+    pattern_idx: usize,
+    track_name: String,
+    notes: Vec<WireNote>,
+    #[serde(default)] instrument_category: Option<String>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct WireScale {
+    root: u8,
+    mode: String,
+}
+
+fn scale_mode_from_str(s: &str) -> lemon_ext_api::ScaleMode {
+    use lemon_ext_api::ScaleMode;
+    match s {
+        "Major" | "major" | "Ionian" => ScaleMode::Major,
+        "Minor" | "minor" | "Aeolian" => ScaleMode::Minor,
+        "Dorian" | "dorian" => ScaleMode::Dorian,
+        "Phrygian" | "phrygian" => ScaleMode::Phrygian,
+        "Lydian" | "lydian" => ScaleMode::Lydian,
+        "Mixolydian" | "mixolydian" => ScaleMode::Mixolydian,
+        "Locrian" | "locrian" => ScaleMode::Locrian,
+        "HarmonicMinor" | "harmonicMinor" => ScaleMode::HarmonicMinor,
+        "MelodicMinor" | "melodicMinor" => ScaleMode::MelodicMinor,
+        "PentatonicMajor" | "pentatonicMajor" => ScaleMode::PentatonicMajor,
+        "PentatonicMinor" | "pentatonicMinor" => ScaleMode::PentatonicMinor,
+        "Blues" | "blues" => ScaleMode::Blues,
+        "Chromatic" | "chromatic" => ScaleMode::Chromatic,
+        _ => ScaleMode::Major,
+    }
+}
+
+fn wire_note_json(n: &Note) -> serde_json::Value {
+    json!({
+        "startTick": n.start_tick,
+        "lengthTicks": n.length_ticks,
+        "pitch": n.pitch,
+        "velocity": n.velocity,
+        "channel": n.channel,
+        "flags": n.flags.bits(),
+    })
+}
+
+fn note_gen_output_json(o: &lemon_ext_api::NoteGeneratorOutput) -> serde_json::Value {
+    let primary: Vec<serde_json::Value> = o.primary.iter().map(wire_note_json).collect();
+    let secondary: Vec<serde_json::Value> = o.secondary.iter().map(|s| {
+        let target = match &s.target {
+            lemon_ext_api::SecondaryTarget::ExistingTrack { idx } => json!({
+                "kind": "existing",
+                "idx": idx,
+            }),
+            lemon_ext_api::SecondaryTarget::NewTrack { name, instrument, color_hint } => json!({
+                "kind": "new",
+                "name": name,
+                "instrument": {
+                    "category": format!("{:?}", instrument.category),
+                    "preferred": instrument.preferred,
+                },
+                "colorHint": color_hint,
+            }),
+            _ => json!({ "kind": "unknown" }),
+        };
+        let notes: Vec<serde_json::Value> = s.notes.iter().map(wire_note_json).collect();
+        json!({
+            "target": target,
+            "patternIdx": s.pattern_idx,
+            "notes": notes,
+        })
+    }).collect();
+    json!({ "primary": primary, "secondary": secondary })
+}
+
+fn run_note_generator(id: &str, raw: &str) -> String {
+    use lemon_ext_api::{
+        all_note_generators, GenContext, ReferenceTrack, Scale, TargetRange,
+    };
+
+    let input: GenInput = match serde_json::from_str(raw) {
+        Ok(v) => v,
+        Err(e) => return format!(
+            r#"{{"ok":false,"error":"bad input json: {}"}}"#,
+            e.to_string().replace('"', "\\\""),
+        ),
+    };
+
+    let generator = match all_note_generators().find(|g| g.id() == id) {
+        Some(g) => g,
+        None => return format!(r#"{{"ok":false,"error":"no note generator with id `{id}`"}}"#),
+    };
+
+    let target = input.target
+        .map(|t| TargetRange::new(t.track_idx, t.pattern_idx, t.start_tick, t.length_ticks))
+        .unwrap_or_else(|| TargetRange::new(0, 0, 0, 384));
+
+    let mut ctx = GenContext::new(input.ppq.max(1), target, input.seed)
+        .with_tempo(input.tempo);
+
+    if let Some(s) = input.scale {
+        ctx = ctx.with_scale(Scale::new(s.root, scale_mode_from_str(&s.mode)));
+    }
+    if !input.references.is_empty() {
+        let refs: Vec<ReferenceTrack> = input.references.iter().map(|r| {
+            let notes: Vec<Note> = r.notes.iter().map(Note::from).collect();
+            ReferenceTrack::new(r.track_idx, r.pattern_idx, r.track_name.clone(), notes)
+        }).collect();
+        ctx = ctx.with_references(refs);
+    }
+    if !input.held_notes.is_empty() {
+        ctx = ctx.with_held_notes(input.held_notes.iter().map(Note::from).collect());
+    }
+    if input.pattern_len > 0 {
+        ctx = ctx.with_pattern_len(input.pattern_len);
+    }
+
+    let params = build_param_values(&input.params);
+
+    match generator.generate(&ctx, &params) {
+        Ok(output) => {
+            let v = json!({ "ok": true, "output": note_gen_output_json(&output) });
+            serde_json::to_string(&v).unwrap_or_else(|_| r#"{"ok":false,"error":"json encode failed"}"#.into())
+        }
+        Err(e) => format!(
+            r#"{{"ok":false,"error":"{}"}}"#,
+            e.to_string().replace('"', "\\\""),
+        ),
+    }
+}
+
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_maxixa_lemon_ExtHost_nativeExtRunGen<'caller>(
+    mut unowned: EnvUnowned<'caller>, _c: JClass<'caller>,
+    ext_id: JString<'caller>, input: JString<'caller>,
+) -> jstring {
+    let mut result: jstring = std::ptr::null_mut();
+    let _ = unowned.with_env(|env| -> jni::errors::Result<()> {
+        let id: String = env.get_string(&ext_id).map(|s| s.into()).unwrap_or_default();
+        let inp: String = env.get_string(&input).map(|s| s.into()).unwrap_or_default();
+        log::info!("nativeExtRunGen(id={id}, bytes={})", inp.len());
+
+        let out_json = std::panic::catch_unwind(|| run_note_generator(&id, &inp))
+            .unwrap_or_else(|_| {
+                log::error!("run_note_generator panicked for id={id}");
+                r#"{"ok":false,"error":"extension panicked"}"#.to_string()
+            });
+
+        let js = env.new_string(&out_json)?;
+        result = js.into_raw();
+        Ok(())
+    });
+    result
+}
