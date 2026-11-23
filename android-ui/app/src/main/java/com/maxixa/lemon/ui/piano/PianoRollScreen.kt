@@ -52,6 +52,7 @@ fun PianoRollScreen(
     var showPatternPicker by remember { mutableStateOf(false) }
     var showPatternLength by remember { mutableStateOf(false) }
     var showQuantize by remember { mutableStateOf(false) }
+    var showExtensions by remember { mutableStateOf(false) }
     var showChord by remember { mutableStateOf(false) }
     var showScale by remember { mutableStateOf(false) }
     var reloadTick by remember { mutableStateOf(0) }
@@ -112,6 +113,16 @@ fun PianoRollScreen(
             state = state,
             onApplied = commit,
         )
+
+        // Extension editor trigger
+        androidx.compose.material3.ExtendedFloatingActionButton(
+            onClick = { showExtensions = true },
+            modifier = androidx.compose.ui.Modifier
+                .align(androidx.compose.ui.Alignment.BottomEnd)
+                .padding(16.dp),
+        ) {
+            androidx.compose.material3.Text("fx")
+        }
     }
 
     PianoRollDialogHost(
@@ -184,4 +195,43 @@ fun PianoRollScreen(
         )
     }
 
+
+    // ── Extension editor menu (kind=editor) ──
+    // onApply currently only logs the state object + available methods;
+    // the actual apply logic lands in a follow-up once we know the real
+    // selection API (introspected at runtime to logcat).
+    if (showExtensions) {
+        com.maxixa.lemon.ui.ext.ExtensionsMenu(
+            onDismiss = { showExtensions = false },
+            onApply = { id, params ->
+                showExtensions = false
+                try {
+                    android.util.Log.i("Lemon", "extension picked: $id, params=$params")
+                    val cls = state::class.java
+                    val methodNames = cls.methods
+                        .filter { m ->
+                            m.name.contains("elect", ignoreCase = true) ||
+                            m.name.contains("otes", ignoreCase = true) ||
+                            m.name.contains("commit", ignoreCase = true)
+                        }
+                        .map { it.name }
+                        .distinct()
+                        .sorted()
+                    android.util.Log.i("Lemon", "PianoRollState selection-ish methods: $methodNames")
+                    // Try known field names
+                    val fields = cls.fields
+                        .filter { f ->
+                            f.name.contains("elect", ignoreCase = true) ||
+                            f.name.contains("otes", ignoreCase = true)
+                        }
+                        .map { "${it.name}: ${it.type.simpleName}" }
+                        .distinct()
+                    android.util.Log.i("Lemon", "PianoRollState selection-ish fields: $fields")
+                } catch (t: Throwable) {
+                    android.util.Log.e("Lemon", "introspection failed", t)
+                }
+            },
+            kindFilter = "editor",
+        )
+    }
 }
