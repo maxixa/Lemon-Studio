@@ -24,16 +24,5 @@ class LemonApplication : Application() {
             Log.e("Lemon", "engine bootstrap failed", t)
         }
 
-        // DEBUG: prove ExtHost JNI bridge works at startup
-        // (first-ever Kotlin -> JNI -> inventory -> JSON -> Kotlin roundtrip)
-        try {
-            val exts = com.maxixa.lemon.ExtHost.list()
-            android.util.Log.i("Lemon", "ExtHost.list() -> ${exts.size} extensions")
-            exts.forEach {
-                android.util.Log.i("Lemon", "  - ${it.id} (${it.kind}) ${it.name}")
-            }
-        } catch (t: Throwable) {
-            android.util.Log.e("Lemon", "ExtHost.list() failed", t)
-        }
     }
 }
