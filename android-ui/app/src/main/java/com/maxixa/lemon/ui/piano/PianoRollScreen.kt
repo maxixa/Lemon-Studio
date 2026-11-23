@@ -13,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.maxixa.lemon.ui.theme.*
+import com.maxixa.lemon.data.NoteView
 
 /**
  * Piano roll orchestrator — state, effects, dialog visibility.
@@ -200,35 +201,65 @@ fun PianoRollScreen(
     // onApply currently only logs the state object + available methods;
     // the actual apply logic lands in a follow-up once we know the real
     // selection API (introspected at runtime to logcat).
+
+    // ── Extension editor menu (applies to whole pattern) ──
+    // No selection API dependency: quantize transforms every note in state.
+    // For editors that change note count, would need per-note tracking —
+    // next ship for solo-guitar etc.
     if (showExtensions) {
         com.maxixa.lemon.ui.ext.ExtensionsMenu(
             onDismiss = { showExtensions = false },
             onApply = { id, params ->
                 showExtensions = false
                 try {
-                    android.util.Log.i("Lemon", "extension picked: $id, params=$params")
-                    val cls = state::class.java
-                    val methodNames = cls.methods
-                        .filter { m ->
-                            m.name.contains("elect", ignoreCase = true) ||
-                            m.name.contains("otes", ignoreCase = true) ||
-                            m.name.contains("commit", ignoreCase = true)
+                    // 1. Extract current notes as wire format
+                    val wireNotes = state.notes.map { note ->
+                        com.maxixa.lemon.ExtHost.Note(
+                            startTick = note.position,
+                            lengthTicks = note.length,
+                            pitch = note.key.toInt(),
+                            velocity = note.velocity.toInt(),
+                            channel = note.channel.toInt(),
+                            flags = note.flags.toInt(),
+                        )
+                    }
+                    android.util.Log.i("Lemon", "ext apply: $id, ${wireNotes.size} notes, params=$params")
+
+                    // 2. Run extension
+                    val result = com.maxixa.lemon.ExtHost.runNoteEditor(id, wireNotes, params)
+                    if (result == null) {
+                        android.util.Log.e("Lemon", "extension $id returned null")
+                    } else if (result.size != wireNotes.size) {
+                        // Editors that change note count need different apply logic — skip for now
+                        android.util.Log.w("Lemon", "ext $id changed note count (${wireNotes.size} -> ${result.size}); only 1:1 editors supported")
+                    } else {
+                        // 3. Apply in place — replace position/length from result, keep original ID
+                        state.notes.forEachIndexed { i, note ->
+                            val wn = result[i]
+                            state.notes[i] = NoteView(
+                                id = note.id,
+                                position = wn.startTick,
+                                length = wn.lengthTicks,
+                                channel = wn.channel,
+                                key = wn.pitch,
+                                velocity = wn.velocity,
+                                pan = note.pan,
+                                finePitch = note.finePitch,
+                                release = note.release,
+                                modX = note.modX,
+                                modY = note.modY,
+                                flags = wn.flags,
+                                group = note.group,
+                                unk14 = note.unk14,
+                                repeat = note.repeat,
+                            )
                         }
-                        .map { it.name }
-                        .distinct()
-                        .sorted()
-                    android.util.Log.i("Lemon", "PianoRollState selection-ish methods: $methodNames")
-                    // Try known field names
-                    val fields = cls.fields
-                        .filter { f ->
-                            f.name.contains("elect", ignoreCase = true) ||
-                            f.name.contains("otes", ignoreCase = true)
-                        }
-                        .map { "${it.name}: ${it.type.simpleName}" }
-                        .distinct()
-                    android.util.Log.i("Lemon", "PianoRollState selection-ish fields: $fields")
+                        // 4. Commit to engine
+                        commit()
+                        android.util.Log.i("Lemon", "ext $id applied to ${result.size} notes, committed")
+                    }
                 } catch (t: Throwable) {
-                    android.util.Log.e("Lemon", "introspection failed", t)
+                    android.util.Log.e("Lemon", "ext $id threw", t)
                 }
             },
             kindFilter = "editor",
