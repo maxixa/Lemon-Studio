@@ -22,6 +22,8 @@ import com.maxixa.lemon.ui.theme.SystemBarEffect
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.maxixa.lemon.state.*
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.unit.dp
 
 internal enum class DawView { Tracks, PianoRoll, StepSequencer, Playlist, Mixer }
 
@@ -62,6 +64,7 @@ fun DawScreen(
     var showLoopRangeDialog by remember { mutableStateOf(false) }
     var showFactoryDialog by remember { mutableStateOf(false) }
     var showRecordDialog by remember { mutableStateOf(false) }
+    var showExtensions by remember { mutableStateOf(false) }
     var pendingExport by remember { mutableStateOf<ExportRequest?>(null) }
     var renameTarget by remember { mutableStateOf<Pair<Int, String>?>(null) }
     var pendingSampleTarget by remember { mutableStateOf<Int?>(null) }
@@ -253,6 +256,40 @@ fun DawScreen(
             onDismissColorPicker = { showColorPicker = null },
             showSampleEditor = showSampleEditor,
             onDismissSampleEditor = { showSampleEditor = null },
+        )
+
+        // Extension FAB — bottom-end
+        androidx.compose.material3.FloatingActionButton(
+            onClick = { showExtensions = true },
+            modifier = androidx.compose.ui.Modifier
+                .align(androidx.compose.ui.Alignment.BottomEnd)
+                .padding(16.dp)
+        ) {
+            androidx.compose.material3.Text("+", style = androidx.compose.material3.MaterialTheme.typography.headlineMedium)
+        }
+    }
+
+    // ── Extension menu (song generators) ──
+    if (showExtensions) {
+        com.maxixa.lemon.ui.ext.ExtensionsMenu(
+            onDismiss = { showExtensions = false },
+            onApply = { id, params ->
+                val summary = com.maxixa.lemon.ExtHost.generateAndApply(
+                    engine.handleRef, id, params
+                )
+                scope.launch {
+                    if (summary?.ok == true) {
+                        snackbarHost.showSnackbar(
+                            "Generated: ${summary.tracks} tracks · ${summary.notes} notes · ${summary.bars} bars"
+                        )
+                    } else {
+                        snackbarHost.showSnackbar(
+                            "Generate failed: ${summary?.warnings?.joinToString() ?: "unknown"}"
+                        )
+                    }
+                }
+            },
+            kindFilter = "song-generator",
         )
     }
 }
