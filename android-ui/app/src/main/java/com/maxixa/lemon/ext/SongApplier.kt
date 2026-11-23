@@ -197,6 +197,34 @@ object SongApplier {
         // ── 7. Pattern mode (loop the whole thing)
         try { LemonEngineBridge.engineSetPlayMode(handle, false) } catch (_: Throwable) {}
 
+        // Diagnostic: log engine state after apply
+        try {
+            val pc = LemonEngineBridge.enginePatternCount(handle)
+            val cur = LemonEngineBridge.enginePatternCurrent(handle)
+            Log.i(TAG, "engine: patternCount=$pc current=$cur (weSet=$patternNum)")
+        } catch (t: Throwable) { Log.w(TAG, "pattern state query failed", t) }
+
+        try {
+            val catalog = LemonEngineBridge.engineInstrumentCatalog()
+            Log.i(TAG, "instrument catalog (first 800 chars): ${catalog.take(800)}")
+        } catch (t: Throwable) { Log.w(TAG, "catalog query failed", t) }
+
+        for ((i, ch) in channelIndices.withIndex()) {
+            try {
+                val inst = LemonEngineBridge.engineChannelInstrument(handle, ch)
+                Log.i(TAG, "channel[$i] idx=$ch instrument='$inst'")
+            } catch (t: Throwable) { Log.w(TAG, "channel[$i] query failed", t) }
+        }
+
+        try {
+            val decoded = com.maxixa.lemon.state.PianoRollBridge.decodeNotes(handle)
+            if (decoded != null) {
+                Log.i(TAG, "verify: current pattern has ${decoded.notes.size} notes (ppq=${decoded.ppq}, len=${decoded.patternLength})")
+            } else {
+                Log.w(TAG, "verify: decodeNotes returned null")
+            }
+        } catch (t: Throwable) { Log.w(TAG, "verify decodeNotes failed", t) }
+
         Log.i(TAG, "applied: ${channelIndices.size} tracks, pattern $patternNum, ${allNotes.size} notes, $totalBars bars")
         return Summary(channelIndices.size, patternNum, allNotes.size, totalBars, warnings)
     }

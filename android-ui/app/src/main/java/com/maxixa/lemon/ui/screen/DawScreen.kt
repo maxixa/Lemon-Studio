@@ -279,8 +279,16 @@ fun DawScreen(
                 )
                 scope.launch {
                     if (summary?.ok == true) {
+                        // Refresh UI pattern list so the new pattern shows up
+                        try { refetchPatternNames() } catch (_: Throwable) {}
+                        // Force engine + UI to view the newly created pattern
+                        try {
+                            com.maxixa.lemon.LemonEngineBridge.engineSetPattern(
+                                engine.handleRef, summary.patternNum
+                            )
+                        } catch (_: Throwable) {}
                         snackbarHost.showSnackbar(
-                            "Generated: ${summary.tracks} tracks · ${summary.notes} notes · ${summary.bars} bars"
+                            "Generated: ${summary.tracks} tracks · ${summary.notes} notes · ${summary.bars} bars (pattern ${summary.patternNum})"
                         )
                     } else {
                         snackbarHost.showSnackbar(
