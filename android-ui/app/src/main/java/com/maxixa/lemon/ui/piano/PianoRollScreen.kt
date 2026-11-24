@@ -347,10 +347,67 @@ fun PianoRollScreen(
                                     repeat = 0,
                                 ))
                             }
+                            // Materialize secondary tracks (harmony lines etc.)
+                            var secondaryNotes = 0
+                            result.secondary.forEach { sec ->
+                                val targetChannel: Int? = when (sec.kind) {
+                                    "existing" -> sec.idx
+                                    "new" -> {
+                                        val newCh = try {
+                                            com.maxixa.lemon.LemonEngineBridge.engineAddSamplerChannel(handle)
+                                        } catch (t: Throwable) {
+                                            android.util.Log.e("Lemon", "gen $id: engineAddSamplerChannel threw", t)
+                                            -1
+                                        }
+                                        if (newCh >= 0) {
+                                            val instName = when (sec.instrumentCategory?.lowercase()) {
+                                                "drums" -> "Drums"
+                                                "bass" -> "Bass"
+                                                "guitar" -> "Guitar"
+                                                "keys", "piano" -> "Piano"
+                                                "lead", "synth" -> "Lead"
+                                                "pad" -> "Pad"
+                                                else -> null
+                                            }
+                                            if (instName != null) {
+                                                try {
+                                                    com.maxixa.lemon.LemonEngineBridge.engineSetBuiltinInstrument(
+                                                        handle, newCh, instName
+                                                    )
+                                                } catch (_: Throwable) {}
+                                            }
+                                            newCh
+                                        } else { null }
+                                    }
+                                    else -> null
+                                }
+                                if (targetChannel != null) {
+                                    sec.notes.forEach { wn ->
+                                        state.notes.add(NoteView(
+                                            id = nextId++,
+                                            position = wn.startTick,
+                                            length = wn.lengthTicks,
+                                            channel = targetChannel,
+                                            key = wn.pitch,
+                                            velocity = wn.velocity,
+                                            pan = 0,
+                                            finePitch = 0,
+                                            release = 0,
+                                            modX = 0,
+                                            modY = 0,
+                                            flags = wn.flags,
+                                            group = 0,
+                                            unk14 = 0,
+                                            repeat = 0,
+                                        ))
+                                        secondaryNotes++
+                                    }
+                                }
+                            }
                             commit()
                             android.util.Log.i("Lemon",
-                                "gen $id: ${result.primary.size} notes -> ch $targetCh, " +
-                                "${result.secondary.size} secondary tracks deferred")
+                                "gen $id: ${result.primary.size} primary -> ch $targetCh, " +
+                                "$secondaryNotes secondary notes materialized")
                         }
                     }
                 } catch (t: Throwable) {
