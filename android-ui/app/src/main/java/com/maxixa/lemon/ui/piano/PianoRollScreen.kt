@@ -54,6 +54,7 @@ fun PianoRollScreen(
     var showPatternLength by remember { mutableStateOf(false) }
     var showQuantize by remember { mutableStateOf(false) }
     var showExtensions by remember { mutableStateOf(false) }
+    var showGeneratorMenu by remember { mutableStateOf(false) }
     var showChord by remember { mutableStateOf(false) }
     var showScale by remember { mutableStateOf(false) }
     var reloadTick by remember { mutableStateOf(0) }
@@ -115,6 +116,13 @@ fun PianoRollScreen(
             onApplied = commit,
         )
 
+    // ── gen FAB (above fx) ──
+    androidx.compose.material3.ExtendedFloatingActionButton(
+        onClick = { showGeneratorMenu = true },
+        modifier = androidx.compose.ui.Modifier
+            .align(androidx.compose.ui.Alignment.BottomEnd)
+            .padding(16.dp, 84.dp, 16.dp, 16.dp),
+    ) { androidx.compose.material3.Text("gen") }
         // Extension editor trigger
         androidx.compose.material3.ExtendedFloatingActionButton(
             onClick = { showExtensions = true },
@@ -265,4 +273,92 @@ fun PianoRollScreen(
             kindFilter = "editor",
         )
     }
+
+    // ── Generator extension menu (solo-guitar etc.) ──
+    // Reference = notes on channels OTHER than state.targetChannel.
+    // Target  = current pattern, notes appended on state.targetChannel.
+    // So: put chords on channel 0, set target channel to 1, tap gen → solo
+    //     appears on channel 1 following channel 0's chords.
+    if (showGeneratorMenu) {
+        com.maxixa.lemon.ui.ext.ExtensionsMenu(
+            onDismiss = { showGeneratorMenu = false },
+            onApply = { id, params ->
+                showGeneratorMenu = false
+                try {
+                    val targetCh = state.targetChannel
+                    val refNotes = state.notes.filter { it.channel != targetCh }
+                    if (refNotes.isEmpty()) {
+                        android.util.Log.w("Lemon", "gen $id: no reference notes on other channels")
+                    } else {
+                        val wireRef = refNotes.map { note ->
+                            com.maxixa.lemon.ExtHost.Note(
+                                startTick = note.position,
+                                lengthTicks = note.length,
+                                pitch = note.key,
+                                velocity = note.velocity,
+                                channel = note.channel,
+                                flags = note.flags,
+                            )
+                        }
+                        val target = com.maxixa.lemon.ExtHost.TargetRange(
+                            trackIdx = 0,
+                            patternIdx = 0,
+                            startTick = 0,
+                            lengthTicks = state.patternLength,
+                        )
+                        val reference = com.maxixa.lemon.ExtHost.ReferenceTrack(
+                            trackIdx = 0,
+                            patternIdx = 0,
+                            trackName = "Reference",
+                            notes = wireRef,
+                        )
+                        val result = com.maxixa.lemon.ExtHost.runNoteGenerator(
+                            id = id,
+                            target = target,
+                            references = listOf(reference),
+                            params = params,
+                            scale = null,
+                            seed = System.currentTimeMillis(),
+                            ppq = state.ppq,
+                            tempo = bpm.toDouble(),
+                        )
+                        if (result == null) {
+                            android.util.Log.e("Lemon", "gen $id: runNoteGenerator returned null")
+                        } else if (result.primary.isEmpty()) {
+                            android.util.Log.w("Lemon", "gen $id: 0 primary notes generated")
+                        } else {
+                            var nextId = (state.notes.maxOfOrNull { it.id } ?: 0L) + 1
+                            result.primary.forEach { wn ->
+                                state.notes.add(NoteView(
+                                    id = nextId++,
+                                    position = wn.startTick,
+                                    length = wn.lengthTicks,
+                                    channel = targetCh,
+                                    key = wn.pitch,
+                                    velocity = wn.velocity,
+                                    pan = 0,
+                                    finePitch = 0,
+                                    release = 0,
+                                    modX = 0,
+                                    modY = 0,
+                                    flags = wn.flags,
+                                    group = 0,
+                                    unk14 = 0,
+                                    repeat = 0,
+                                ))
+                            }
+                            commit()
+                            android.util.Log.i("Lemon",
+                                "gen $id: ${result.primary.size} notes -> ch $targetCh, " +
+                                "${result.secondary.size} secondary tracks deferred")
+                        }
+                    }
+                } catch (t: Throwable) {
+                    android.util.Log.e("Lemon", "gen $id threw", t)
+                }
+            },
+            kindFilter = "generator",
+        )
+    }
+
 }
